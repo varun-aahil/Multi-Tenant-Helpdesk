@@ -3,30 +3,43 @@
 {% block title %}{{ article.title }} - Knowledge Base{% endblock %}
 
 {% block content %}
-<div class="card">
+<div class="card" style="max-width: 960px; margin: 0 auto;">
     <div style="margin-bottom: 1.5rem;">
         <a href="{% url 'customer_knowledge_base' %}" class="btn btn-secondary" style="margin-bottom: 1rem;">← Back to Knowledge Base</a>
-        <h1>{{ article.title }}</h1>
-        <div style="display: flex; gap: 1rem; margin-top: 0.5rem; color: #6b7280; font-size: 0.9rem;">
+        <h1 style="margin: 0 0 0.25rem 0; font-size: 1.9rem;">{{ article.title }}</h1>
+        <div style="display: flex; gap: 1rem; margin-top: 0.25rem; color: #9ca3af; font-size: 0.9rem; flex-wrap: wrap;">
             {% if article.category %}<span>Category: {{ article.category }}</span>{% endif %}
             <span>Views: {{ article.view_count }}</span>
             <span>Created: {{ article.created_at|date:"M d, Y" }}</span>
         </div>
     </div>
     
-    <div style="white-space: pre-wrap; line-height: 1.8;">{{ article.content }}</div>
+    <div style="
+        white-space: pre-wrap;
+        line-height: 1.9;
+        font-size: 0.98rem;
+        color: #e5e7eb;
+        padding: 1.25rem 1.5rem;
+        border-radius: 12px;
+        background: radial-gradient(circle at top left, rgba(15,118,110,0.35), transparent 55%),
+                    radial-gradient(circle at bottom right, rgba(37,99,235,0.25), transparent 55%),
+                    rgba(8,14,30,0.9);
+        box-shadow: inset 0 0 0 1px rgba(148,163,184,0.35);
+    ">
+        {{ article.content }}
+    </div>
     
     {% if article.tags %}
-        <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb;">
-            <strong>Tags:</strong>
+        <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(148,163,184,0.35);">
+            <strong style="color: #e5e7eb;">Tags:</strong>
             {% for tag in article.tags %}
-                <span class="badge badge-secondary" style="margin-left: 0.5rem;">{{ tag }}</span>
+                <span class="badge badge-secondary" style="margin-left: 0.5rem; margin-top: 0.25rem;">{{ tag }}</span>
             {% endfor %}
         </div>
     {% endif %}
     
-    <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb;">
-        <p style="color: #6b7280;">Still need help?</p>
+    <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(148,163,184,0.35);">
+        <p style="color: #9ca3af; margin-bottom: 0.75rem;">Still need help?</p>
         <a href="{% url 'customer_create_ticket' %}" class="btn btn-primary">Create a Support Ticket</a>
     </div>
 </div>

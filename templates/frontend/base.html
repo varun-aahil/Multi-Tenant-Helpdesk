@@ -443,14 +443,16 @@
         }
         
         .filters {
-            background: white;
+            background: rgba(8, 14, 30, 0.9);
             padding: 1rem;
-            border-radius: 8px;
+            border-radius: 12px;
             margin-bottom: 1.5rem;
             display: flex;
             gap: 1rem;
             flex-wrap: wrap;
             align-items: end;
+            border: 1px solid rgba(148,163,184,0.35);
+            box-shadow: 0 18px 35px rgba(3,7,18,0.85);
         }
         
         .filters .form-group {
@@ -589,8 +591,43 @@
             });
         }
 
+        function clearAuthStorage() {
+            const keys = ['access_token', 'refresh_token', 'user_id', 'username', 'is_staff'];
+            ['admin', 'customer'].forEach(role => {
+                keys.forEach(key => localStorage.removeItem(`${role}_${key}`));
+            });
+            keys.forEach(key => localStorage.removeItem(key));
+        }
+
+        function parseJwt(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                if (!base64Url) return null;
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function isTokenExpired(token) {
+            const payload = parseJwt(token);
+            if (!payload || !payload.exp) return false;
+            const expMs = payload.exp * 1000;
+            return Date.now() >= expMs;
+        }
+
         function getPortalToken() {
-            return getRoleValue('access_token');
+            const token = getRoleValue('access_token');
+            if (!token) return null;
+            if (isTokenExpired(token)) {
+                clearAuthStorage();
+                return null;
+            }
+            return token;
         }
 
         window.getPortalToken = getPortalToken;
@@ -700,9 +737,54 @@
                 }
             }
         });
-        
-        // Store token in sessionStorage for form submissions (not in URL)
-        // Token is sent via POST data or Authorization header, never in URL
+
+        // SLA countdown timers
+        function formatCountdown(totalSeconds) {
+            const abs = Math.max(0, totalSeconds);
+            const days = Math.floor(abs / 86400);
+            const hours = Math.floor((abs % 86400) / 3600);
+            const minutes = Math.floor((abs % 3600) / 60);
+            const seconds = abs % 60;
+
+            if (days > 0) {
+                return `Escalates in ${days}d ${hours}h`;
+            }
+            if (hours > 0) {
+                return `Escalates in ${hours}h ${minutes}m`;
+            }
+            if (minutes > 0) {
+                return `Escalates in ${minutes}m ${seconds}s`;
+            }
+            return `Escalates in ${seconds}s`;
+        }
+
+        function initSlaCountdowns() {
+            const nodes = document.querySelectorAll('[data-sla-seconds]');
+            nodes.forEach(node => {
+                let seconds = parseInt(node.getAttribute('data-sla-seconds'), 10);
+                if (Number.isNaN(seconds) || seconds <= 0) {
+                    return;
+                }
+
+                const update = () => {
+                    if (seconds <= 0) {
+                        node.textContent = 'Overdue';
+                        node.classList.add('overdue');
+                        node.removeAttribute('data-sla-seconds');
+                        clearInterval(timer);
+                        return;
+                    }
+                    node.textContent = formatCountdown(seconds);
+                    seconds -= 1;
+                };
+
+                update();
+                const timer = setInterval(update, 1000);
+            });
+        }
+
+        // Initialize countdown timers once DOM and auth state are ready
+        document.addEventListener('DOMContentLoaded', initSlaCountdowns);
     </script>
     {% block extra_js %}{% endblock %}
 </body>

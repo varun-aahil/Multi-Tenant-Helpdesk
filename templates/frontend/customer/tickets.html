@@ -114,7 +114,12 @@
                         </td>
                         <td>
                             {% if item.sla_timer %}
-                                <span class="sla-timer {% if item.sla_timer.is_overdue %}overdue{% endif %}">{{ item.sla_timer.label }}</span>
+                                <span class="sla-timer {% if item.sla_timer.is_overdue %}overdue{% endif %}"
+                                      {% if item.sla_timer.seconds is not None and not item.sla_timer.is_overdue %}
+                                      data-sla-seconds="{{ item.sla_timer.seconds }}"
+                                      {% endif %}>
+                                    {{ item.sla_timer.label }}
+                                </span>
                             {% else %}
                                 <span style="color: #9ca3af;">No SLA deadline</span>
                             {% endif %}

@@ -36,49 +36,42 @@
     </div>
 </div>
 
-<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
-    <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <h2 style="margin: 0;">Recent Tickets</h2>
-            <a href="{% url 'customer_tickets' %}" style="color: #667eea; text-decoration: none;">View all →</a>
-        </div>
-        {% if recent_tickets %}
-            <div style="display: flex; flex-direction: column; gap: 1rem;">
-                {% for item in recent_tickets %}
-                    <div style="padding: 1rem; border: 1px solid rgba(56,189,248,0.25); border-radius: 12px; background: rgba(8,14,30,0.75); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                        <div>
-                            <p style="margin: 0; font-weight: 600;">#{{ item.ticket.id }} · {{ item.ticket.title }}</p>
-                            <p style="margin: 0.25rem 0 0; color: #93c5fd; font-size: 0.9rem;">
-                                Created <span data-datetime-utc="{{ item.ticket.created_at|date:'c' }}">{{ item.ticket.created_at|date:"M d, Y H:i" }}</span>
-                            </p>
-                        </div>
-                        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-                            <span class="badge badge-{{ item.ticket.status|lower|slugify }}">{{ item.ticket.status }}</span>
-                            <span class="badge badge-{{ item.ticket.priority|lower }}">{{ item.ticket.priority }}</span>
-                            {% if item.is_overdue %}
-                                <span class="badge badge-overdue">Overdue</span>
-                            {% endif %}
-                            {% if item.sla_timer %}
-                                <span class="sla-timer {% if item.sla_timer.is_overdue %}overdue{% endif %}">{{ item.sla_timer.label }}</span>
-                            {% endif %}
-                            <a href="{% url 'customer_ticket_detail' item.ticket.id %}" class="btn btn-secondary" style="padding: 0.5rem 1rem;">View</a>
-                        </div>
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h2 style="margin: 0;">Recent Tickets</h2>
+        <a href="{% url 'customer_tickets' %}" style="color: #667eea; text-decoration: none;">View all →</a>
+    </div>
+    {% if recent_tickets %}
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            {% for item in recent_tickets %}
+                <div style="padding: 1rem; border: 1px solid rgba(56,189,248,0.25); border-radius: 12px; background: rgba(8,14,30,0.75); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <p style="margin: 0; font-weight: 600;">#{{ item.ticket.id }} · {{ item.ticket.title }}</p>
+                        <p style="margin: 0.25rem 0 0; color: #93c5fd; font-size: 0.9rem;">
+                            Created <span data-datetime-utc="{{ item.ticket.created_at|date:'c' }}">{{ item.ticket.created_at|date:"M d, Y H:i" }}</span>
+                        </p>
                     </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <p style="color: #94a3b8;">No recent tickets yet. Create one to get started.</p>
-        {% endif %}
-    </div>
-    
-    <div class="card">
-        <h2 style="margin-bottom: 1rem;">Quick Actions</h2>
-        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-            <a href="{% url 'customer_create_ticket' %}" class="btn btn-primary" style="width: 100%;">Submit a New Ticket</a>
-            <a href="{% url 'customer_knowledge_base' %}" class="btn btn-secondary" style="width: 100%;">Browse Knowledge Base</a>
-            <a href="{% url 'customer_tickets' %}?status=Open" class="btn btn-secondary" style="width: 100%;">View Open Tickets</a>
-            <a href="{% url 'customer_tickets' %}?priority=High" class="btn btn-secondary" style="width: 100%;">High Priority Tickets</a>
+                    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                        <span class="badge badge-{{ item.ticket.status|lower|slugify }}">{{ item.ticket.status }}</span>
+                        <span class="badge badge-{{ item.ticket.priority|lower }}">{{ item.ticket.priority }}</span>
+                        {% if item.is_overdue %}
+                            <span class="badge badge-overdue">Overdue</span>
+                        {% endif %}
+                        {% if item.sla_timer %}
+                            <span class="sla-timer {% if item.sla_timer.is_overdue %}overdue{% endif %}"
+                                  {% if item.sla_timer.seconds is not None and not item.sla_timer.is_overdue %}
+                                  data-sla-seconds="{{ item.sla_timer.seconds }}"
+                                  {% endif %}>
+                                {{ item.sla_timer.label }}
+                            </span>
+                        {% endif %}
+                        <a href="{% url 'customer_ticket_detail' item.ticket.id %}" class="btn btn-secondary" style="padding: 0.5rem 1rem;">View</a>
+                    </div>
+                </div>
+            {% endfor %}
         </div>
-    </div>
+    {% else %}
+        <p style="color: #94a3b8;">No recent tickets yet. Create one to get started.</p>
+    {% endif %}
 </div>
 {% endblock %}

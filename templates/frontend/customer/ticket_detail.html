@@ -21,11 +21,26 @@
     <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
         <div>
             <h3 style="margin-bottom: 1rem;">Description</h3>
-            <p style="white-space: pre-wrap; background: #f9fafb; padding: 1rem; border-radius: 4px;">{{ ticket.description }}</p>
+            <p style="
+                white-space: pre-wrap;
+                background: rgba(8,14,30,0.9);
+                padding: 1rem 1.25rem;
+                border-radius: 10px;
+                color: #e5e7eb;
+                box-shadow: 0 10px 25px rgba(15,23,42,0.7);
+                border: 1px solid rgba(148,163,184,0.35);
+            ">{{ ticket.description }}</p>
         </div>
         <div>
             <h3 style="margin-bottom: 1rem;">Details</h3>
-            <div style="background: #f9fafb; padding: 1rem; border-radius: 4px;">
+            <div style="
+                background: rgba(8,14,30,0.9);
+                padding: 1rem 1.25rem;
+                border-radius: 10px;
+                color: #e5e7eb;
+                box-shadow: 0 10px 25px rgba(15,23,42,0.7);
+                border: 1px solid rgba(148,163,184,0.35);
+            ">
                 <p><strong>Customer:</strong> {{ ticket.customer.name }} ({{ ticket.customer.email }})</p>
                 <p><strong>Assignee:</strong> {% if ticket.assignee %}{{ ticket.assignee.username }}{% else %}<span style="color: #9ca3af;">Unassigned</span>{% endif %}</p>
                 <p><strong>Created:</strong> <span data-datetime-utc="{{ ticket.created_at|date:'c' }}">{{ ticket.created_at|date:"M d, Y H:i" }}</span></p>
