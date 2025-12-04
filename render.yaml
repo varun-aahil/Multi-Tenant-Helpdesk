@@ -105,11 +105,12 @@ services:
         value: prod
 
 databases:
+  - type: redis
+    name: helpdesk-redis
+    plan: starter
+
+databases:
   - name: helpdesk-postgres
     plan: starter
     databaseName: helpdesk
     user: helpdesk_user
-
-  - type: redis
-    name: helpdesk-redis
-    plan: starter
