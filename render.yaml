@@ -110,6 +110,6 @@ databases:
     databaseName: helpdesk
     user: helpdesk_user
 
-redis:
-  - name: helpdesk-redis
+  - type: redis
+    name: helpdesk-redis
     plan: starter
