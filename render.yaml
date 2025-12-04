@@ -2,7 +2,7 @@ services:
   - type: web
     name: helpdesk-web
     env: python
-    plan: standard
+    plan: free
     buildCommand: |
       pip install -r requirements.txt
       python manage.py collectstatic --noinput
@@ -41,7 +41,7 @@ services:
   - type: worker
     name: helpdesk-celery
     env: python
-    plan: standard
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: celery -A helpdesk_system worker --loglevel=info
     envVars:
@@ -74,7 +74,7 @@ services:
   - type: worker
     name: helpdesk-beat
     env: python
-    plan: starter
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: celery -A helpdesk_system beat --loglevel=info
     envVars:
@@ -106,11 +106,11 @@ services:
 
   - type: redis
     name: helpdesk-redis
-    plan: starter
+    plan: free
     ipAllowList: []
 
 databases:
   - name: helpdesk-postgres
-    plan: starter
+    plan: free
     databaseName: helpdesk
     user: helpdesk_user
