@@ -1,0 +1,44 @@
+{% extends 'frontend/base.html' %}
+
+{% block title %}Create Ticket - Helpdesk System{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <h2 style="margin-bottom: 1.5rem;">Create New Ticket</h2>
+    <form method="post" id="createTicketForm">
+        {% csrf_token %}
+        <input type="hidden" name="token" id="tokenInput">
+        <div class="form-group">
+            <label for="title">Title *</label>
+            <input type="text" id="title" name="title" required placeholder="Brief description of your issue">
+        </div>
+        <div class="form-group">
+            <label for="description">Description *</label>
+            <textarea id="description" name="description" required placeholder="Detailed description of your problem"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="priority">Priority *</label>
+            <select id="priority" name="priority" required>
+                {% for priority_code, priority_name in priorities %}
+                    <option value="{{ priority_code }}" {% if priority_code == 'Medium' %}selected{% endif %}>{{ priority_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+            <button type="submit" class="btn btn-primary">Create Ticket</button>
+            <a href="{% url 'customer_dashboard' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+<script>
+// Add token to form on load
+document.addEventListener('DOMContentLoaded', function() {
+    const token = window.getPortalToken ? window.getPortalToken() : localStorage.getItem('access_token');
+    if (token) {
+        const tokenInput = document.getElementById('tokenInput');
+        if (tokenInput) tokenInput.value = token;
+    }
+});
+</script>
+{% endblock %}
+

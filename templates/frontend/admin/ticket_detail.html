@@ -1,0 +1,256 @@
+{% extends 'frontend/base.html' %}
+
+{% block title %}Ticket #{{ ticket.id }} - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="ticket-detail-container">
+    <div class="card ticket-header">
+        <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 style="margin: 0; color: #1f2937;">Ticket #{{ ticket.id }}</h1>
+                <p style="color: #6b7280; margin-top: 0.5rem; font-size: 1.1rem;">{{ ticket.title }}</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <span class="badge badge-{{ ticket.status|lower|slugify }}">{{ ticket.status }}</span>
+                <span class="badge badge-{{ ticket.priority|lower }}">{{ ticket.priority }}</span>
+                {% if is_overdue %}
+                    <span class="badge badge-overdue">OVERDUE</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+        <div class="card">
+            <h3 style="margin-bottom: 1rem; color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">Description</h3>
+            <p style="white-space: pre-wrap; background: #f9fafb; padding: 1.5rem; border-radius: 8px; line-height: 1.8; color: #374151;">{{ ticket.description }}</p>
+        </div>
+        <div class="card">
+            <h3 style="margin-bottom: 1rem; color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">Ticket Details</h3>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="detail-item">
+                    <span class="detail-label">Customer:</span>
+                    <span class="detail-value">{{ ticket.customer.name }}<br><small style="color: #6b7280;">{{ ticket.customer.email }}</small></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Assignee:</span>
+                    <span class="detail-value">{% if ticket.assignee %}{{ ticket.assignee.username }}{% else %}<span style="color: #9ca3af;">Unassigned</span>{% endif %}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Created:</span>
+                    <span class="detail-value" data-datetime-utc="{{ ticket.created_at|date:'c' }}">{{ ticket.created_at|date:"M d, Y H:i" }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Due Date:</span>
+                    <span class="detail-value">
+                        {% if ticket.due_at %}
+                            <span data-datetime-utc="{{ ticket.due_at|date:'c' }}">{{ ticket.due_at|date:"M d, Y H:i" }}</span>
+                        {% else %}
+                            <span style="color: #9ca3af;">Not set</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Escalation:</span>
+                    <span class="detail-value">
+                        {% if sla_timer %}
+                            <span class="sla-timer {% if sla_timer.is_overdue %}overdue{% endif %}">{{ sla_timer.label }}</span>
+                        {% else %}
+                            <span style="color: #9ca3af;">No SLA deadline</span>
+                        {% endif %}
+                    </span>
+                </div>
+                {% if ticket.sla_policy %}
+                <div class="detail-item">
+                    <span class="detail-label">SLA Policy:</span>
+                    <span class="detail-value">{{ ticket.sla_policy.name }}</span>
+                </div>
+                {% endif %}
+                {% if ticket.first_response_at %}
+                <div class="detail-item">
+                    <span class="detail-label">First Response:</span>
+                    <span class="detail-value" data-datetime-utc="{{ ticket.first_response_at|date:'c' }}">{{ ticket.first_response_at|date:"M d, Y H:i" }}</span>
+                </div>
+                {% endif %}
+                {% if ticket.resolved_at %}
+                <div class="detail-item">
+                    <span class="detail-label">Resolved:</span>
+                    <span class="detail-value" data-datetime-utc="{{ ticket.resolved_at|date:'c' }}">{{ ticket.resolved_at|date:"M d, Y H:i" }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="card ticket-actions">
+        <h3 style="margin-bottom: 1.5rem; color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">Update Ticket</h3>
+        
+        <form method="post" id="updateStatusForm" style="margin-bottom: 1.5rem;">
+            {% csrf_token %}
+            <input type="hidden" name="token" id="tokenInput">
+            <input type="hidden" name="action" value="change_status">
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; align-items: end;">
+                <div>
+                    <label for="status" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151;">Status</label>
+                    <select id="status" name="status" class="form-select">
+                        {% for status_code, status_name in status_choices %}
+                            <option value="{{ status_code }}" {% if ticket.status == status_code %}selected{% endif %}>{{ status_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="height: fit-content;">Update Status</button>
+            </div>
+        </form>
+        
+        <form method="post" id="updatePriorityForm" style="margin-bottom: 1.5rem;">
+            {% csrf_token %}
+            <input type="hidden" name="token" id="tokenInputPriority">
+            <input type="hidden" name="action" value="change_priority">
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; align-items: end;">
+                <div>
+                    <label for="priority" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151;">Priority</label>
+                    <select id="priority" name="priority" class="form-select">
+                        {% for priority_code, priority_name in priority_choices %}
+                            <option value="{{ priority_code }}" {% if ticket.priority == priority_code %}selected{% endif %}>{{ priority_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="height: fit-content;">Update Priority</button>
+            </div>
+        </form>
+        
+        <form method="post" id="assignForm">
+            {% csrf_token %}
+            <input type="hidden" name="token" id="tokenInputAssign">
+            <input type="hidden" name="action" value="assign">
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; align-items: end;">
+                <div>
+                    <label for="assignee_id" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151;">Assign To</label>
+                    <select id="assignee_id" name="assignee_id" class="form-select">
+                        <option value="">Unassign</option>
+                        {% for user in users %}
+                            <option value="{{ user.id }}" {% if ticket.assignee and ticket.assignee.id == user.id %}selected{% endif %}>{{ user.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="height: fit-content;">Assign Ticket</button>
+            </div>
+        </form>
+    </div>
+    
+    <div style="margin-top: 1.5rem;">
+        <a href="{% url 'admin_tickets' %}" class="btn btn-secondary">← Back to Tickets</a>
+    </div>
+</div>
+
+<style>
+.ticket-detail-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.ticket-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    margin-bottom: 1.5rem;
+}
+
+.ticket-header h1,
+.ticket-header p {
+    color: white;
+}
+
+.ticket-actions {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.detail-item:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.detail-value {
+    color: #1f2937;
+    font-size: 0.95rem;
+}
+
+.form-select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 1rem;
+    background: white;
+    transition: all 0.2s;
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    border-radius: 6px;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: #6b7280;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
+}
+</style>
+
+<script>
+// Add token to all forms on load
+document.addEventListener('DOMContentLoaded', function() {
+    const token = window.getPortalToken ? window.getPortalToken() : localStorage.getItem('access_token');
+    if (token) {
+        const tokenInputs = document.querySelectorAll('input[name="token"]');
+        tokenInputs.forEach(input => {
+            input.value = token;
+        });
+    } else {
+        // Redirect to login if no token
+        window.location.href = '{% url "admin_login" %}';
+    }
+});
+</script>
+{% endblock %}
+

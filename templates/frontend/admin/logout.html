@@ -1,0 +1,27 @@
+{% extends 'frontend/base.html' %}
+
+{% block title %}Logged Out - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 500px; margin: 4rem auto; text-align: center;">
+    <h2 style="margin-bottom: 1rem;">You have been logged out</h2>
+    <p style="color: #6b7280; margin-bottom: 2rem;">Thank you for using Admin Panel</p>
+    <div style="display: flex; gap: 1rem; justify-content: center;">
+        <a href="{% url 'admin_login' %}" class="btn btn-primary">Login Again</a>
+        <a href="{% url 'customer_login' %}" class="btn btn-secondary">Customer Login</a>
+    </div>
+</div>
+<script>
+    // Clear admin-specific tokens from localStorage
+    ['access_token', 'refresh_token', 'user_id', 'username', 'is_staff'].forEach(key => {
+        localStorage.removeItem(key); // legacy keys
+        localStorage.removeItem(`admin_${key}`);
+    });
+
+    // Clear auth cookies scoped to admin routes
+    document.cookie = 'admin_access_token=; Max-Age=0; path=/admin-panel; SameSite=Lax';
+    document.cookie = 'admin_refresh_token=; Max-Age=0; path=/admin-panel; SameSite=Lax';
+    document.cookie = 'access_token=; Max-Age=0; path=/; SameSite=Lax';
+</script>
+{% endblock %}
+

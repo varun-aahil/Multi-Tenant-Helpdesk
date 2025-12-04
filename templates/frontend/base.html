@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Helpdesk System{% endblock %}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600&display=swap');
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(14,116,144,0.45), transparent 60%),
+                radial-gradient(circle at bottom right, rgba(59,130,246,0.35), transparent 55%),
+                linear-gradient(135deg, #050c1b 0%, #0a172b 35%, #0f1f36 100%);
+            background-attachment: fixed;
+            background-size: 160% 160%;
+            animation: majesticGradient 22s ease-in-out infinite;
+            color: #f1f5f9;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background: linear-gradient(120deg, rgba(6,11,25,0.94) 0%, rgba(14,116,144,0.95) 55%, rgba(59,130,246,0.95) 100%);
+            color: white;
+            padding: 1.25rem 2rem;
+            box-shadow: 0 18px 38px rgba(5,12,27,0.9);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(18px);
+            border-bottom: 1px solid rgba(94, 234, 212, 0.25);
+        }
+        
+        .navbar-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .navbar-brand {
+            font-family: 'Space Grotesk', 'Inter', sans-serif;
+            font-size: 1.55rem;
+            font-weight: 600;
+            text-decoration: none;
+            color: #e0f2fe;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            text-shadow: 0 0 20px rgba(59, 130, 246, 0.55);
+        }
+        
+        .navbar-links {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+        
+        .navbar-links a {
+            color: #f8fafc;
+            text-decoration: none;
+            padding: 0.5rem 1.25rem;
+            border-radius: 999px;
+            transition: all 0.25s ease;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
+        
+        .navbar-links a:hover {
+            background: rgba(14,165,233,0.25);
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(15,118,110,0.45);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 2.5rem auto 3rem;
+            padding: 0 2rem 2rem;
+            animation: containerFadeIn 0.5s ease-out;
+        }
+        
+        .card {
+            background: radial-gradient(circle at top left, rgba(14,165,233,0.08), transparent 55%),
+                        radial-gradient(circle at bottom right, rgba(56,189,248,0.08), transparent 55%),
+                        rgba(9, 14, 30, 0.9);
+            border-radius: 18px;
+            padding: 2rem;
+            box-shadow: 0 18px 35px rgba(15,23,42,0.85);
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(14,165,233,0.35);
+            backdrop-filter: blur(22px);
+        }
+        
+        .card:hover {
+            box-shadow: 0 30px 60px rgba(4, 10, 22, 0.95);
+            transform: translateY(-4px) scale(1.01);
+            border-color: rgba(45, 212, 191, 0.7);
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 0.875rem 1.75rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(107, 114, 128, 0.4);
+        }
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            box-shadow: 0 0 0 1px rgba(15,23,42,0.45);
+        }
+        
+        .badge-new {
+            background: radial-gradient(circle at top left, #3b82f6, #1d4ed8);
+            color: #eff6ff;
+        }
+        .badge-open {
+            background: radial-gradient(circle at top left, #10b981, #047857);
+            color: #ecfdf5;
+        }
+        .badge-in-progress {
+            background: radial-gradient(circle at top left, #f59e0b, #b45309);
+            color: #fffbeb;
+        }
+        .badge-resolved {
+            background: radial-gradient(circle at top left, #22c55e, #16a34a);
+            color: #ecfdf5;
+        }
+        .badge-closed {
+            background: radial-gradient(circle at top left, #4ade80, #16a34a);
+            color: #ecfdf5;
+        }
+        
+        .badge-low {
+            background: radial-gradient(circle at top left, #e5e7eb, #9ca3af);
+            color: #0f172a;
+        }
+        .badge-medium {
+            background: radial-gradient(circle at top left, #fef3c7, #f59e0b);
+            color: #78350f;
+        }
+        .badge-high {
+            background: radial-gradient(circle at top left, #fee2e2, #ef4444);
+            color: #7f1d1d;
+        }
+        .badge-critical {
+            background: radial-gradient(circle at top left, #fecaca, #b91c1c);
+            color: #7f1d1d;
+        }
+        
+        .badge-overdue {
+            background: #ef4444;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #cbd5f5;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.875rem;
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.25s ease;
+            background: rgba(15, 23, 42, 0.85);
+            color: #f8fafc;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+        }
+        
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: rgba(8, 13, 29, 0.9);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 18px 35px rgba(3, 7, 18, 0.85);
+            color: #e2e8f0;
+        }
+        
+        .table th,
+        .table td {
+            padding: 1.25rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+        }
+        
+        .table thead tr {
+            background: linear-gradient(120deg, rgba(15,118,110,0.95), rgba(14,165,233,0.9));
+        }
+        
+        .table th {
+            background: transparent;
+            font-weight: 600;
+            color: #f8fafc;
+            text-transform: uppercase;
+            font-size: 0.72rem;
+            letter-spacing: 0.08em;
+        }
+        
+        .table th:first-child {
+            border-top-left-radius: 16px;
+        }
+        
+        .table th:last-child {
+            border-top-right-radius: 16px;
+        }
+        
+        .table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .table tr:hover {
+            background: rgba(14,165,233,0.05);
+            transition: background 0.2s ease;
+        }
+        
+        .table tbody tr {
+            transition: all 0.2s ease;
+        }
+        
+        .table tbody tr:hover {
+            transform: scale(1.01);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .alert {
+            padding: 1.25rem 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .alert-success {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: #065f46;
+            border-left-color: #10b981;
+        }
+        
+        .alert-error {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #991b1b;
+            border-left-color: #ef4444;
+        }
+        
+        .alert-info {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            color: #1e40af;
+            border-left-color: #3b82f6;
+        }
+
+        /* Scrollbar styling for a polished feel */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15,23,42,0.9);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #4f46e5, #ec4899);
+            border-radius: 999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #6366f1, #f472b6);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            position: relative;
+            padding: 2rem;
+            border-radius: 18px;
+            overflow: hidden;
+            background: rgba(7, 14, 30, 0.92);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            box-shadow: inset 0 0 0 1px rgba(94, 234, 212, 0.2), 0 24px 50px rgba(3, 7, 18, 0.85);
+            transition: transform 0.35s ease, box-shadow 0.35s ease, border 0.35s ease;
+        }
+        
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top, rgba(59,130,246,0.35), transparent 60%);
+            opacity: 0;
+            transition: opacity 0.35s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-6px) scale(1.01);
+            box-shadow: inset 0 0 0 1px rgba(56,189,248,0.6), 0 30px 70px rgba(2,6,23,0.95);
+            border-color: rgba(94, 234, 212, 0.8);
+        }
+        
+        .stat-card:hover::after {
+            opacity: 1;
+        }
+        
+        .stat-card h3 {
+            font-size: 2.6rem;
+            margin-bottom: 0.35rem;
+            font-weight: 700;
+            color: #f8fafc;
+        }
+        
+        .stat-card p {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .stat-card--resolved h3 {
+            color: #22c55e;
+        }
+        .stat-card--resolved p {
+            color: #bbf7d0;
+        }
+        .stat-card--open h3 {
+            color: #e5e7eb;
+        }
+        .stat-card--open p {
+            color: #bae6fd;
+        }
+        .stat-card--overdue h3 {
+            color: #f97373;
+        }
+        .stat-card--overdue p {
+            color: #fecaca;
+        }
+        
+        .filters {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: end;
+        }
+        
+        .filters .form-group {
+            margin-bottom: 0;
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .filters .form-group label {
+            margin-bottom: 0.25rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6b7280;
+        }
+        
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .sla-timer {
+            display: inline-block;
+            margin-top: 0.25rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #6b7280;
+        }
+
+        .sla-timer.overdue {
+            color: #b91c1c;
+        }
+
+        /* Subtle global animations */
+        @keyframes majesticGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes containerFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="{% if user.is_staff %}{% url 'admin_dashboard' %}{% else %}{% url 'customer_dashboard' %}{% endif %}" class="navbar-brand">
+                Helpdesk System
+            </a>
+            <div class="navbar-links">
+                <span id="userInfo" style="display: none;">Welcome, <span id="username"></span></span>
+                <div id="navLinks" style="display: none;">
+                    <a id="dashboardLink" href="#">Dashboard</a>
+                    <a id="ticketsLink" href="#">Tickets</a>
+                    <a id="customersLink" href="#" style="display: none;">Customers</a>
+                    <a id="kbLink" href="#">Knowledge Base</a>
+                    <a id="createTicketLink" href="#" style="display: none;">Create Ticket</a>
+                    <a id="logoutLink" href="#">Logout</a>
+                </div>
+                <div id="loginLinks">
+                    <a href="{% url 'customer_login' %}">Customer Login</a>
+                    <a href="{% url 'admin_login' %}">Admin Login</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </div>
+    
+    <script>
+        // Convert all data-datetime-utc attributes to browser-local time
+        document.addEventListener('DOMContentLoaded', function() {
+            const nodes = document.querySelectorAll('[data-datetime-utc]');
+            nodes.forEach(function(node) {
+                const iso = node.getAttribute('data-datetime-utc');
+                if (!iso) return;
+                const d = new Date(iso);
+                if (Number.isNaN(d.getTime())) return;
+                const opts = {
+                    year: 'numeric',
+                    month: 'short',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                };
+                node.textContent = d.toLocaleString(undefined, opts);
+            });
+        });
+
+        const ADMIN_PATH_PREFIXES = ['/admin-panel', '/admin-login', '/admin-logout'];
+
+        function getPortalRole() {
+            const path = window.location.pathname;
+            return ADMIN_PATH_PREFIXES.some(prefix => path.startsWith(prefix)) ? 'admin' : 'customer';
+        }
+
+        function roleKey(key) {
+            return `${getPortalRole()}_${key}`;
+        }
+
+        function getRoleValue(key) {
+            return localStorage.getItem(roleKey(key));
+        }
+
+        function syncSharedKeysFromRole() {
+            const keys = ['access_token', 'refresh_token', 'user_id', 'username', 'is_staff'];
+            keys.forEach(key => {
+                const value = getRoleValue(key);
+                if (value) {
+                    localStorage.setItem(key, value);
+                }
+            });
+        }
+
+        function getPortalToken() {
+            return getRoleValue('access_token');
+        }
+
+        window.getPortalToken = getPortalToken;
+
+        function getAuthHeaders() {
+            const token = getPortalToken();
+            if (!token) {
+                return {};
+            }
+            return {
+                'Authorization': 'Bearer ' + token,
+                'Content-Type': 'application/json'
+            };
+        }
+        
+        function checkAuth() {
+            const token = getPortalToken();
+            const username = getRoleValue('username');
+            const role = getPortalRole();
+            const isStaff = role === 'admin';
+            
+            if (token && username) {
+                document.getElementById('userInfo').style.display = 'inline';
+                document.getElementById('username').textContent = username;
+                document.getElementById('navLinks').style.display = 'flex';
+                document.getElementById('loginLinks').style.display = 'none';
+                
+                if (isStaff) {
+                    document.getElementById('dashboardLink').href = '{% url "admin_dashboard" %}';
+                    document.getElementById('ticketsLink').href = '{% url "admin_tickets" %}';
+                    document.getElementById('customersLink').href = '{% url "admin_customers" %}';
+                    document.getElementById('customersLink').style.display = 'inline';
+                    document.getElementById('kbLink').href = '{% url "admin_knowledge_base" %}';
+                    document.getElementById('createTicketLink').style.display = 'none';
+                } else {
+                    document.getElementById('dashboardLink').href = '{% url "customer_dashboard" %}';
+                    document.getElementById('ticketsLink').href = '{% url "customer_tickets" %}';
+                    document.getElementById('customersLink').style.display = 'none';
+                    document.getElementById('kbLink').href = '{% url "customer_knowledge_base" %}';
+                    document.getElementById('createTicketLink').href = '{% url "customer_create_ticket" %}';
+                    document.getElementById('createTicketLink').style.display = 'inline';
+                }
+                
+                document.getElementById('logoutLink').href = isStaff ? '{% url "admin_logout" %}' : '{% url "customer_logout" %}';
+            } else {
+                document.getElementById('userInfo').style.display = 'none';
+                document.getElementById('navLinks').style.display = 'none';
+                document.getElementById('loginLinks').style.display = 'flex';
+            }
+        }
+        
+        function ensureProtectedAccess() {
+        const protectedPaths = ['/customer/', '/admin-panel/'];
+        const currentPath = window.location.pathname;
+        const isProtected = protectedPaths.some(path => currentPath.startsWith(path));
+            if (!isProtected) {
+                return;
+            }
+            if (!getPortalToken()) {
+            if (currentPath.startsWith('/admin-panel')) {
+                window.location.href = '{% url "admin_login" %}';
+            } else {
+                window.location.href = '{% url "customer_login" %}';
+            }
+        }
+        }
+
+        syncSharedKeysFromRole();
+        checkAuth();
+        ensureProtectedAccess();
+
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                syncSharedKeysFromRole();
+                checkAuth();
+            }
+        });
+        
+        // Intercept protected form submissions to add token
+        document.addEventListener('submit', function(e) {
+            const form = e.target;
+            if (form.tagName !== 'FORM') {
+                return;
+            }
+
+            const requiresAuth = form.dataset.requireAuth === 'true' || !!form.querySelector('input[name="token"]');
+            if (!requiresAuth) {
+                return;
+            }
+
+            const token = getPortalToken();
+                if (token) {
+                let tokenInput = form.querySelector('input[name="token"]');
+                if (!tokenInput) {
+                    tokenInput = document.createElement('input');
+                        tokenInput.type = 'hidden';
+                        tokenInput.name = 'token';
+                        form.appendChild(tokenInput);
+                    }
+                tokenInput.value = token;
+            } else {
+                e.preventDefault();
+                if (getPortalRole() === 'admin') {
+                    window.location.href = '{% url "admin_login" %}';
+                } else {
+                    window.location.href = '{% url "customer_login" %}';
+                }
+            }
+        });
+        
+        // Store token in sessionStorage for form submissions (not in URL)
+        // Token is sent via POST data or Authorization header, never in URL
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+

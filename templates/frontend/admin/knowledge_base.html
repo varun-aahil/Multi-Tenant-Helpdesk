@@ -1,0 +1,140 @@
+{% extends 'frontend/base.html' %}
+
+{% block title %}Knowledge Base - Admin Panel{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <h1>Knowledge Base</h1>
+    <a href="{% url 'admin:knowledgebase_knowledgebase_add' %}" class="btn btn-primary">Create Article</a>
+</div>
+
+{% if search or selected_category or published_filter %}
+<div class="filters">
+    <div class="form-group">
+        <label>Published</label>
+        <select onchange="updateFilters('published', this.value)">
+            <option value="">All</option>
+            <option value="true" {% if published_filter == 'true' %}selected{% endif %}>Published</option>
+            <option value="false" {% if published_filter == 'false' %}selected{% endif %}>Draft</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Category</label>
+        <select onchange="updateFilters('category', this.value)">
+            <option value="">All Categories</option>
+            {% for cat in categories %}
+                <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Search</label>
+        <form method="get" id="searchForm" style="display: flex; gap: 0.5rem;">
+            <input type="text" name="search" value="{{ search }}" placeholder="Search articles..." id="searchInput">
+            <input type="hidden" name="published" value="{{ published_filter }}" id="publishedInput">
+            <input type="hidden" name="category" value="{{ selected_category }}" id="categoryInput">
+            <input type="hidden" name="token" id="tokenInput">
+            <button type="submit" class="btn btn-secondary">Search</button>
+            <a href="{% url 'admin_knowledge_base' %}" class="btn btn-secondary">Clear</a>
+        </form>
+    </div>
+</div>
+{% else %}
+<div style="margin-bottom: 1.5rem;">
+    <button onclick="showFilters()" class="btn btn-secondary">Show Filters</button>
+</div>
+<div class="filters" id="filtersSection" style="display: none;">
+    <div class="form-group">
+        <label>Published</label>
+        <select onchange="updateFilters('published', this.value)">
+            <option value="">All</option>
+            <option value="true">Published</option>
+            <option value="false">Draft</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Category</label>
+        <select onchange="updateFilters('category', this.value)">
+            <option value="">All Categories</option>
+            {% for cat in categories %}
+                <option value="{{ cat }}">{{ cat }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Search</label>
+        <form method="get" id="searchForm" style="display: flex; gap: 0.5rem;">
+            <input type="text" name="search" placeholder="Search articles..." id="searchInput">
+            <input type="hidden" name="published" value="" id="publishedInput">
+            <input type="hidden" name="category" value="" id="categoryInput">
+            <input type="hidden" name="token" id="tokenInput">
+            <button type="submit" class="btn btn-secondary">Search</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+<script>
+function showFilters() {
+    document.getElementById('filtersSection').style.display = 'flex';
+}
+function updateFilters(type, value) {
+    if (type === 'published') {
+        document.getElementById('publishedInput').value = value;
+    } else if (type === 'category') {
+        document.getElementById('categoryInput').value = value;
+    }
+}
+// Add token to form on load
+document.addEventListener('DOMContentLoaded', function() {
+    const token = window.getPortalToken ? window.getPortalToken() : localStorage.getItem('access_token');
+    if (token) {
+        const tokenInput = document.getElementById('tokenInput');
+        if (tokenInput) tokenInput.value = token;
+    }
+});
+</script>
+
+{% if articles %}
+    <div class="card">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Published</th>
+                    <th>Views</th>
+                    <th>Created By</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for article in articles %}
+                    <tr>
+                        <td><strong>{{ article.title }}</strong></td>
+                        <td>{{ article.category|default:"—" }}</td>
+                        <td>
+                            {% if article.is_published %}
+                                <span class="badge badge-success">Published</span>
+                            {% else %}
+                                <span class="badge badge-secondary">Draft</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ article.view_count }}</td>
+                        <td>{% if article.created_by %}{{ article.created_by.username }}{% else %}—{% endif %}</td>
+                        <td>{{ article.created_at|date:"M d, Y" }}</td>
+                        <td>
+                            <a href="{% url 'admin_kb_article_detail' article.id %}" class="btn btn-secondary" style="padding: 0.5rem 1rem;">Edit</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="card empty-state">
+        <p>No articles found.</p>
+    </div>
+{% endif %}
+{% endblock %}
+

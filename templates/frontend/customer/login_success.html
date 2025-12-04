@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Successful</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f5f5f5;
+        }
+        .message {
+            text-align: center;
+            padding: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="message">
+        <h2>Login successful! Redirecting...</h2>
+    </div>
+    <script>
+        function setAuthCookie(name, value, hours, path) {
+            const date = new Date();
+            date.setTime(date.getTime() + (hours * 60 * 60 * 1000));
+            document.cookie = `${name}=${value}; expires=${date.toUTCString()}; path=${path}; SameSite=Lax`;
+        }
+
+        // Persist customer-specific auth data
+        localStorage.setItem('customer_access_token', '{{ access_token }}');
+        localStorage.setItem('customer_refresh_token', '{{ refresh_token }}');
+        localStorage.setItem('customer_user_id', '{{ user.id }}');
+        localStorage.setItem('customer_username', '{{ user.username }}');
+        localStorage.setItem('customer_is_staff', 'false');
+
+        // Update generic keys for immediate compatibility
+        localStorage.setItem('access_token', '{{ access_token }}');
+        localStorage.setItem('refresh_token', '{{ refresh_token }}');
+        localStorage.setItem('user_id', '{{ user.id }}');
+        localStorage.setItem('username', '{{ user.username }}');
+        localStorage.setItem('is_staff', 'false');
+
+        // Clear admin cookies if any
+        setAuthCookie('admin_access_token', '', -1, '/');
+        setAuthCookie('admin_refresh_token', '', -1, '/');
+
+        // Store tokens in cookies scoped to customer routes only
+        setAuthCookie('customer_access_token', '{{ access_token }}', 1, '/customer');
+        setAuthCookie('customer_refresh_token', '{{ refresh_token }}', 24, '/customer');
+
+        // Immediate redirect to dashboard
+        setTimeout(function() {
+            window.location.href = '{% url "customer_dashboard" %}';
+        }, 100);
+    </script>
+</body>
+</html>
+

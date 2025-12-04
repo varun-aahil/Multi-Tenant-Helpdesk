@@ -1,0 +1,34 @@
+{% extends 'frontend/base.html' %}
+
+{% block title %}{{ article.title }} - Knowledge Base{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="margin-bottom: 1.5rem;">
+        <a href="{% url 'customer_knowledge_base' %}" class="btn btn-secondary" style="margin-bottom: 1rem;">← Back to Knowledge Base</a>
+        <h1>{{ article.title }}</h1>
+        <div style="display: flex; gap: 1rem; margin-top: 0.5rem; color: #6b7280; font-size: 0.9rem;">
+            {% if article.category %}<span>Category: {{ article.category }}</span>{% endif %}
+            <span>Views: {{ article.view_count }}</span>
+            <span>Created: {{ article.created_at|date:"M d, Y" }}</span>
+        </div>
+    </div>
+    
+    <div style="white-space: pre-wrap; line-height: 1.8;">{{ article.content }}</div>
+    
+    {% if article.tags %}
+        <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb;">
+            <strong>Tags:</strong>
+            {% for tag in article.tags %}
+                <span class="badge badge-secondary" style="margin-left: 0.5rem;">{{ tag }}</span>
+            {% endfor %}
+        </div>
+    {% endif %}
+    
+    <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb;">
+        <p style="color: #6b7280;">Still need help?</p>
+        <a href="{% url 'customer_create_ticket' %}" class="btn btn-primary">Create a Support Ticket</a>
+    </div>
+</div>
+{% endblock %}
+

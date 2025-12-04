@@ -1,0 +1,82 @@
+{% extends 'frontend/base.html' %}
+
+{% block title %}Customers - Admin Panel{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 1.5rem;">Customers</h1>
+
+{% if search %}
+<div class="filters">
+    <div class="form-group">
+        <label>Search</label>
+        <form method="get" id="searchForm" style="display: flex; gap: 0.5rem;">
+            <input type="text" name="search" value="{{ search }}" placeholder="Search customers..." id="searchInput">
+            <input type="hidden" name="token" id="tokenInput">
+            <button type="submit" class="btn btn-secondary">Search</button>
+            <a href="{% url 'admin_customers' %}" class="btn btn-secondary">Clear</a>
+        </form>
+    </div>
+</div>
+{% else %}
+<div style="margin-bottom: 1.5rem;">
+    <button onclick="showFilters()" class="btn btn-secondary">Show Search</button>
+</div>
+<div class="filters" id="filtersSection" style="display: none;">
+    <div class="form-group">
+        <label>Search</label>
+        <form method="get" id="searchForm" style="display: flex; gap: 0.5rem;">
+            <input type="text" name="search" placeholder="Search customers..." id="searchInput">
+            <input type="hidden" name="token" id="tokenInput">
+            <button type="submit" class="btn btn-secondary">Search</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+<script>
+function showFilters() {
+    document.getElementById('filtersSection').style.display = 'flex';
+}
+// Add token to form on load
+document.addEventListener('DOMContentLoaded', function() {
+    const token = window.getPortalToken ? window.getPortalToken() : localStorage.getItem('access_token');
+    if (token) {
+        const tokenInput = document.getElementById('tokenInput');
+        if (tokenInput) tokenInput.value = token;
+    }
+});
+</script>
+
+{% if customers %}
+    <div class="card">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Company</th>
+                    <th>Phone</th>
+                    <th>Tickets</th>
+                    <th>Created</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for customer in customers %}
+                    <tr>
+                        <td><strong>{{ customer.name }}</strong></td>
+                        <td>{{ customer.email }}</td>
+                        <td>{{ customer.company|default:"—" }}</td>
+                        <td>{{ customer.phone|default:"—" }}</td>
+                        <td><strong>{{ customer.ticket_count }}</strong></td>
+                        <td>{{ customer.created_at|date:"M d, Y" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="card empty-state">
+        <p>No customers found.</p>
+    </div>
+{% endif %}
+{% endblock %}
+

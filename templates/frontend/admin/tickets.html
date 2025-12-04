@@ -1,0 +1,180 @@
+{% extends 'frontend/base.html' %}
+
+{% block title %}Tickets - Admin Panel{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 1.5rem;">Tickets Management</h1>
+
+{% if search or status_filter or priority_filter or assignee_filter %}
+<div class="filters">
+    <div class="form-group">
+        <label>Status</label>
+        <select onchange="updateFilters('status', this.value)">
+            <option value="">All Statuses</option>
+            {% for status_code, status_name in status_choices %}
+                <option value="{{ status_code }}" {% if status_filter == status_code %}selected{% endif %}>{{ status_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Priority</label>
+        <select onchange="updateFilters('priority', this.value)">
+            <option value="">All Priorities</option>
+            {% for priority_code, priority_name in priority_choices %}
+                <option value="{{ priority_code }}" {% if priority_filter == priority_code %}selected{% endif %}>{{ priority_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Assignee</label>
+        <select onchange="updateFilters('assignee', this.value)">
+            <option value="">All Assignees</option>
+            {% for user in users %}
+                <option value="{{ user.id }}" {% if assignee_filter == user.id|stringformat:"s" %}selected{% endif %}>{{ user.username }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Search</label>
+        <form method="get" id="searchForm" style="display: flex; gap: 0.5rem;">
+            <input type="text" name="search" value="{{ search }}" placeholder="Search tickets..." id="searchInput">
+            <input type="hidden" name="status" value="{{ status_filter }}" id="statusInput">
+            <input type="hidden" name="priority" value="{{ priority_filter }}" id="priorityInput">
+            <input type="hidden" name="assignee" value="{{ assignee_filter }}" id="assigneeInput">
+            <input type="hidden" name="token" id="tokenInput">
+            <button type="submit" class="btn btn-secondary">Search</button>
+            <a href="{% url 'admin_tickets' %}" class="btn btn-secondary">Clear</a>
+        </form>
+    </div>
+</div>
+{% else %}
+<div style="margin-bottom: 1.5rem;">
+    <button onclick="showFilters()" class="btn btn-secondary">Show Filters</button>
+</div>
+<div class="filters" id="filtersSection" style="display: none;">
+    <div class="form-group">
+        <label>Status</label>
+        <select onchange="updateFilters('status', this.value)">
+            <option value="">All Statuses</option>
+            {% for status_code, status_name in status_choices %}
+                <option value="{{ status_code }}">{{ status_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Priority</label>
+        <select onchange="updateFilters('priority', this.value)">
+            <option value="">All Priorities</option>
+            {% for priority_code, priority_name in priority_choices %}
+                <option value="{{ priority_code }}">{{ priority_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Assignee</label>
+        <select onchange="updateFilters('assignee', this.value)">
+            <option value="">All Assignees</option>
+            {% for user in users %}
+                <option value="{{ user.id }}">{{ user.username }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Search</label>
+        <form method="get" id="searchForm" style="display: flex; gap: 0.5rem;">
+            <input type="text" name="search" placeholder="Search tickets..." id="searchInput">
+            <input type="hidden" name="status" value="" id="statusInput">
+            <input type="hidden" name="priority" value="" id="priorityInput">
+            <input type="hidden" name="assignee" value="" id="assigneeInput">
+            <input type="hidden" name="token" id="tokenInput">
+            <button type="submit" class="btn btn-secondary">Search</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+<script>
+function showFilters() {
+    document.getElementById('filtersSection').style.display = 'flex';
+}
+function updateFilters(type, value) {
+    if (type === 'status') {
+        document.getElementById('statusInput').value = value;
+    } else if (type === 'priority') {
+        document.getElementById('priorityInput').value = value;
+    } else if (type === 'assignee') {
+        document.getElementById('assigneeInput').value = value;
+    }
+}
+// Add token to form on load
+document.addEventListener('DOMContentLoaded', function() {
+    const token = window.getPortalToken ? window.getPortalToken() : localStorage.getItem('access_token');
+    if (token) {
+        const tokenInput = document.getElementById('tokenInput');
+        if (tokenInput) tokenInput.value = token;
+    }
+});
+</script>
+
+{% if tickets %}
+    <div class="card">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Customer</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Assignee</th>
+                    <th>Due Date</th>
+                    <th>Escalation</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in tickets %}
+                    <tr>
+                        <td>#{{ item.ticket.id }}</td>
+                        <td><strong>{{ item.ticket.title|truncatewords:6 }}</strong></td>
+                        <td>{{ item.ticket.customer.name }}</td>
+                        <td>
+                            <span class="badge badge-{{ item.ticket.status|lower|slugify }}">{{ item.ticket.status }}</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-{{ item.ticket.priority|lower }}">{{ item.ticket.priority }}</span>
+                        </td>
+                        <td>{% if item.ticket.assignee %}{{ item.ticket.assignee.username }}{% else %}<span style="color: #9ca3af;">Unassigned</span>{% endif %}</td>
+                        <td>
+                            {% if item.ticket.due_at %}
+                                {% if item.is_overdue %}
+                                    <span class="badge badge-overdue">OVERDUE</span><br>
+                                {% endif %}
+                                <span data-datetime-utc="{{ item.ticket.due_at|date:'c' }}">{{ item.ticket.due_at|date:"M d, Y H:i" }}</span>
+                            {% else %}
+                                <span style="color: #9ca3af;">Not set</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.sla_timer %}
+                                <span class="sla-timer {% if item.sla_timer.is_overdue %}overdue{% endif %}">{{ item.sla_timer.label }}</span>
+                            {% else %}
+                                <span style="color: #9ca3af;">No SLA deadline</span>
+                            {% endif %}
+                        </td>
+                        <td><span data-datetime-utc="{{ item.ticket.created_at|date:'c' }}">{{ item.ticket.created_at|date:"M d, Y H:i" }}</span></td>
+                        <td>
+                            <a href="{% url 'admin_ticket_detail' item.ticket.id %}" class="btn btn-secondary" style="padding: 0.5rem 1rem;">Manage</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="card empty-state">
+        <p>No tickets found.</p>
+    </div>
+{% endif %}
+{% endblock %}
+

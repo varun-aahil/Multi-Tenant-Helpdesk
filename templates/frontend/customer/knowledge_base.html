@@ -1,0 +1,96 @@
+{% extends 'frontend/base.html' %}
+
+{% block title %}Knowledge Base - Helpdesk System{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 1.5rem;">Knowledge Base</h1>
+
+{% if search or selected_category %}
+<div class="filters">
+    <div class="form-group">
+        <label>Category</label>
+        <select onchange="updateFilters('category', this.value)">
+            <option value="">All Categories</option>
+            {% for cat in categories %}
+                <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Search</label>
+        <form method="get" id="searchForm" style="display: flex; gap: 0.5rem;">
+            <input type="text" name="search" value="{{ search }}" placeholder="Search articles..." id="searchInput">
+            <input type="hidden" name="category" value="{{ selected_category }}" id="categoryInput">
+            <input type="hidden" name="token" id="tokenInput">
+            <button type="submit" class="btn btn-secondary">Search</button>
+            <a href="{% url 'customer_knowledge_base' %}" class="btn btn-secondary">Clear</a>
+        </form>
+    </div>
+</div>
+{% else %}
+<div style="margin-bottom: 1.5rem;">
+    <button onclick="showFilters()" class="btn btn-secondary">Show Filters</button>
+</div>
+<div class="filters" id="filtersSection" style="display: none;">
+    <div class="form-group">
+        <label>Category</label>
+        <select onchange="updateFilters('category', this.value)">
+            <option value="">All Categories</option>
+            {% for cat in categories %}
+                <option value="{{ cat }}">{{ cat }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Search</label>
+        <form method="get" id="searchForm" style="display: flex; gap: 0.5rem;">
+            <input type="text" name="search" placeholder="Search articles..." id="searchInput">
+            <input type="hidden" name="category" value="" id="categoryInput">
+            <input type="hidden" name="token" id="tokenInput">
+            <button type="submit" class="btn btn-secondary">Search</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+<script>
+function showFilters() {
+    document.getElementById('filtersSection').style.display = 'flex';
+}
+function updateFilters(type, value) {
+    if (type === 'category') {
+        document.getElementById('categoryInput').value = value;
+    }
+}
+// Add token to form on load
+document.addEventListener('DOMContentLoaded', function() {
+    const token = window.getPortalToken ? window.getPortalToken() : localStorage.getItem('access_token');
+    if (token) {
+        const tokenInput = document.getElementById('tokenInput');
+        if (tokenInput) tokenInput.value = token;
+    }
+});
+</script>
+
+{% if articles %}
+    <div class="card">
+        {% for article in articles %}
+            <div style="padding: 1.5rem; border-bottom: 1px solid #e5e7eb; {% if not forloop.last %}{% else %}border-bottom: none;{% endif %}">
+                <h3 style="margin-bottom: 0.5rem;">
+                    <a href="{% url 'customer_kb_article' article.id %}" style="color: #667eea; text-decoration: none;">{{ article.title }}</a>
+                </h3>
+                <p style="color: #6b7280; margin-bottom: 0.5rem;">{{ article.content|truncatewords:30 }}</p>
+                <div style="display: flex; gap: 1rem; font-size: 0.875rem; color: #9ca3af;">
+                    {% if article.category %}<span>Category: {{ article.category }}</span>{% endif %}
+                    <span>Views: {{ article.view_count }}</span>
+                    <span>Created: {{ article.created_at|date:"M d, Y" }}</span>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card empty-state">
+        <p>No articles found.</p>
+    </div>
+{% endif %}
+{% endblock %}
+

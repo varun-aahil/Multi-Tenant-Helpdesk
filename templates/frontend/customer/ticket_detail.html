@@ -1,0 +1,58 @@
+{% extends 'frontend/base.html' %}
+
+{% block title %}Ticket #{{ ticket.id }} - Helpdesk System{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1.5rem;">
+        <div>
+            <h1>Ticket #{{ ticket.id }}</h1>
+            <p style="color: #6b7280; margin-top: 0.5rem;">{{ ticket.title }}</p>
+        </div>
+        <div>
+            <span class="badge badge-{{ ticket.status|lower|slugify }}">{{ ticket.status }}</span>
+            <span class="badge badge-{{ ticket.priority|lower }}">{{ ticket.priority }}</span>
+            {% if is_overdue %}
+                <span class="badge badge-overdue">OVERDUE</span>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+        <div>
+            <h3 style="margin-bottom: 1rem;">Description</h3>
+            <p style="white-space: pre-wrap; background: #f9fafb; padding: 1rem; border-radius: 4px;">{{ ticket.description }}</p>
+        </div>
+        <div>
+            <h3 style="margin-bottom: 1rem;">Details</h3>
+            <div style="background: #f9fafb; padding: 1rem; border-radius: 4px;">
+                <p><strong>Customer:</strong> {{ ticket.customer.name }} ({{ ticket.customer.email }})</p>
+                <p><strong>Assignee:</strong> {% if ticket.assignee %}{{ ticket.assignee.username }}{% else %}<span style="color: #9ca3af;">Unassigned</span>{% endif %}</p>
+                <p><strong>Created:</strong> <span data-datetime-utc="{{ ticket.created_at|date:'c' }}">{{ ticket.created_at|date:"M d, Y H:i" }}</span></p>
+                <p><strong>Due Date:</strong>
+                    {% if ticket.due_at %}
+                        <span data-datetime-utc="{{ ticket.due_at|date:'c' }}">{{ ticket.due_at|date:"M d, Y H:i" }}</span>
+                    {% else %}
+                        Not set
+                    {% endif %}
+                </p>
+                <p><strong>Escalation:</strong>
+                    {% if sla_timer %}
+                        <span class="sla-timer {% if sla_timer.is_overdue %}overdue{% endif %}">{{ sla_timer.label }}</span>
+                    {% else %}
+                        <span style="color: #9ca3af;">No SLA deadline</span>
+                    {% endif %}
+                </p>
+                {% if ticket.sla_policy %}
+                    <p><strong>SLA Policy:</strong> {{ ticket.sla_policy.name }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div style="margin-top: 1.5rem;">
+        <a href="{% url 'customer_tickets' %}" class="btn btn-secondary">Back to Tickets</a>
+    </div>
+</div>
+{% endblock %}
+
