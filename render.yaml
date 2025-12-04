@@ -104,7 +104,6 @@ services:
       - key: DJANGO_ENV
         value: prod
 
-databases:
   - type: redis
     name: helpdesk-redis
     plan: starter
