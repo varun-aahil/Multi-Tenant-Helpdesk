@@ -107,6 +107,7 @@ services:
   - type: redis
     name: helpdesk-redis
     plan: starter
+    ipAllowList: []
 
 databases:
   - name: helpdesk-postgres
