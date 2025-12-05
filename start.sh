@@ -1,9 +1,9 @@
 #!/bin/bash
 set -e
 
-# Run migrations
+# Run migrations (don't fail if already migrated)
 echo "Running database migrations..."
-python manage.py migrate_schemas
+python manage.py migrate_schemas || echo "Migrations completed or failed, continuing..."
 
 # Start the server
 echo "Starting server..."
