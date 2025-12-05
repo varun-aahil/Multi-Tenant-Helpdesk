@@ -84,16 +84,24 @@ WSGI_APPLICATION = 'helpdesk_system.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-DATABASES = {
-    'default': {
-        'ENGINE': 'django_tenants.postgresql_backend',
-        'NAME': env('DB_NAME', default='helpdesk_db'),
-        'USER': env('DB_USER', default='postgres'),
-        'PASSWORD': env('DB_PASSWORD', default='postgres'),
-        'HOST': env('DB_HOST', default='localhost'),
-        'PORT': env('DB_PORT', default='5432'),
+# Support DATABASE_URL for platforms like Render, Heroku, etc.
+if 'DATABASE_URL' in os.environ:
+    DATABASES = {
+        'default': env.db()
     }
-}
+    # Ensure we use the django-tenants backend
+    DATABASES['default']['ENGINE'] = 'django_tenants.postgresql_backend'
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django_tenants.postgresql_backend',
+            'NAME': env('DB_NAME', default='helpdesk_db'),
+            'USER': env('DB_USER', default='postgres'),
+            'PASSWORD': env('DB_PASSWORD', default='postgres'),
+            'HOST': env('DB_HOST', default='localhost'),
+            'PORT': env('DB_PORT', default='5432'),
+        }
+    }
 
 DATABASE_ROUTERS = (
     'django_tenants.routers.TenantSyncRouter',
@@ -160,8 +168,25 @@ SIMPLE_JWT = {
 }
 
 # Celery Configuration
-CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='redis://localhost:6379/0')
-CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND', default='redis://localhost:6379/0')
+# Support Railway's REDIS_URL format (Railway provides REDIS_URL automatically)
+# If REDIS_URL is set but CELERY_BROKER_URL is not explicitly set, derive from REDIS_URL
+redis_url = os.environ.get('REDIS_URL')
+celery_broker_url_env = os.environ.get('CELERY_BROKER_URL')
+
+if redis_url and not celery_broker_url_env:
+    # Railway provides REDIS_URL, use it for Celery broker and result backend
+    # Use database 0 for broker, 0 for result backend (can be same for Railway)
+    if '/0' in redis_url or '/1' in redis_url or '/2' in redis_url:
+        # Already has database number, use as-is for broker
+        CELERY_BROKER_URL = redis_url
+        CELERY_RESULT_BACKEND = redis_url
+    else:
+        # No database number, add /0
+        CELERY_BROKER_URL = f"{redis_url}/0"
+        CELERY_RESULT_BACKEND = f"{redis_url}/0"
+else:
+    CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='redis://localhost:6379/0')
+    CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND', default='redis://localhost:6379/0')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
