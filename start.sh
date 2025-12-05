@@ -1,6 +1,15 @@
 #!/bin/bash
 
 echo "=========================================="
+echo "START.SH SCRIPT STARTED"
+echo "=========================================="
+echo "Current directory: $(pwd)"
+echo "Python version: $(python --version)"
+echo "DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE:-not set}"
+echo "PORT: ${PORT:-not set}"
+
+echo ""
+echo "=========================================="
 echo "Ensuring required tables exist..."
 echo "=========================================="
 python manage.py ensure_tables || echo "ensure_tables command not available, continuing..."
@@ -41,5 +50,9 @@ if [ -z "$PORT" ]; then
     PORT=8000
 fi
 echo "Binding to 0.0.0.0:$PORT"
+echo "Gunicorn command: gunicorn helpdesk_system.wsgi:application --bind 0.0.0.0:$PORT --log-file - --access-logfile - --error-logfile - --timeout 120"
+echo "=========================================="
+echo "EXECUTING GUNICORN NOW..."
+echo "=========================================="
 exec gunicorn helpdesk_system.wsgi:application --bind 0.0.0.0:$PORT --log-file - --access-logfile - --error-logfile - --timeout 120
 
