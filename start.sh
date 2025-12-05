@@ -2,14 +2,27 @@
 
 # Run migrations with verbose output
 echo "=========================================="
-echo "Running database migrations..."
+echo "Step 1: Running shared schema migrations..."
+echo "=========================================="
+python manage.py migrate_schemas --shared --verbosity=2
+SHARED_EXIT_CODE=$?
+
+if [ $SHARED_EXIT_CODE -eq 0 ]; then
+    echo "Shared schema migrations completed!"
+else
+    echo "Shared schema migration exit code: $SHARED_EXIT_CODE"
+fi
+
+echo ""
+echo "=========================================="
+echo "Step 2: Running all schema migrations..."
 echo "=========================================="
 python manage.py migrate_schemas --verbosity=2
 MIGRATION_EXIT_CODE=$?
 
 if [ $MIGRATION_EXIT_CODE -eq 0 ]; then
     echo "=========================================="
-    echo "Migrations completed successfully!"
+    echo "All migrations completed successfully!"
     echo "=========================================="
 else
     echo "=========================================="
