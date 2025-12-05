@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: helpdesk-web
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    envVars:
+      - key: DJANGO_ENV
+        value: prod
+      - key: PYTHONUNBUFFERED
+        value: 1
+    healthCheckPath: /
+
+  - type: worker
+    name: helpdesk-worker
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    dockerCommand: celery -A helpdesk_system worker --beat --loglevel=info --concurrency=2
+    envVars:
+      - key: DJANGO_ENV
+        value: prod
+      - key: PYTHONUNBUFFERED
+        value: 1
+
+databases:
+  - name: helpdesk-db
+    plan: free
+    databaseName: helpdesk_db
+    user: helpdesk_user
+

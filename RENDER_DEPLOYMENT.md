@@ -1,0 +1,133 @@
+# Render Deployment Guide (Free Tier - No Credit Card)
+
+## Why Render Didn't Work Before
+
+Render's free tier has some limitations:
+- Services sleep after 15 minutes of inactivity
+- Limited resources (512MB RAM)
+- May need specific configuration
+
+Let's fix the deployment!
+
+## Step 1: Sign Up
+
+1. Go to https://render.com
+2. Sign up with GitHub (no credit card needed for free tier)
+3. Connect your GitHub repository
+
+## Step 2: Create PostgreSQL Database
+
+1. In Render dashboard, click "New +"
+2. Select "PostgreSQL"
+3. Configure:
+   - **Name**: `helpdesk-db`
+   - **Database**: `helpdesk_db`
+   - **User**: `helpdesk_user`
+   - **Region**: Choose closest to you
+   - **Plan**: Free
+4. Click "Create Database"
+5. **Save the Internal Database URL** (you'll need this)
+
+## Step 3: Create Redis Instance
+
+1. Click "New +"
+2. Select "Redis"
+3. Configure:
+   - **Name**: `helpdesk-redis`
+   - **Plan**: Free
+4. Click "Create Redis"
+5. **Save the Internal Redis URL**
+
+## Step 4: Create Web Service
+
+1. Click "New +"
+2. Select "Web Service"
+3. Connect your GitHub repository
+4. Configure:
+   - **Name**: `helpdesk-web`
+   - **Region**: Same as database
+   - **Branch**: `main`
+   - **Root Directory**: (leave empty)
+   - **Environment**: `Docker`
+   - **Dockerfile Path**: `Dockerfile`
+   - **Docker Context**: (leave empty)
+   - **Plan**: Free
+
+5. **Environment Variables**:
+   ```
+   DATABASE_URL=<from PostgreSQL service>
+   REDIS_URL=<from Redis service>
+   SECRET_KEY=<generate a random secret key>
+   DJANGO_ENV=prod
+   ALLOWED_HOSTS=helpdesk-web.onrender.com
+   ```
+
+6. Click "Create Web Service"
+
+## Step 5: Create Worker Service (Celery)
+
+1. Click "New +"
+2. Select "Background Worker"
+3. Connect same GitHub repository
+4. Configure:
+   - **Name**: `helpdesk-worker`
+   - **Environment**: `Docker`
+   - **Dockerfile Path**: `Dockerfile`
+   - **Start Command**: `celery -A helpdesk_system worker --beat --loglevel=info --concurrency=2`
+   - **Plan**: Free
+
+5. **Environment Variables** (same as web service):
+   ```
+   DATABASE_URL=<same as web>
+   REDIS_URL=<same as web>
+   SECRET_KEY=<same as web>
+   DJANGO_ENV=prod
+   ```
+
+6. Click "Create Background Worker"
+
+## Step 6: Run Migrations
+
+After web service deploys:
+
+1. Go to web service → "Shell"
+2. Run:
+   ```bash
+   python manage.py migrate_schemas --shared
+   python manage.py migrate_schemas
+   ```
+
+## Step 7: Create Superuser
+
+In the same shell:
+```bash
+python manage.py createsuperuser
+```
+
+## Important Notes
+
+- **Free tier limitations**:
+  - Services sleep after 15 min inactivity (first request wakes them up)
+  - 512MB RAM per service
+  - Limited CPU
+
+- **If deployment fails**:
+  - Check build logs for errors
+  - Ensure DATABASE_URL and REDIS_URL use "Internal" URLs (not public)
+  - Verify Dockerfile is correct
+
+## Troubleshooting
+
+### Service won't start
+- Check environment variables are set correctly
+- Verify DATABASE_URL format: `postgresql://user:pass@host:5432/dbname`
+- Check logs in Render dashboard
+
+### Database connection errors
+- Use "Internal Database URL" not "External"
+- Ensure database is in same region as web service
+
+### Redis connection errors
+- Use "Internal Redis URL"
+- Check REDIS_URL format: `redis://host:6379`
+
