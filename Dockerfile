@@ -13,10 +13,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project files
 COPY . /app/
 
+# Make start script executable
+RUN chmod +x /app/start.sh
+
 # Collect static files (for production)
 RUN python manage.py collectstatic --noinput || true
 
 # Expose port
 EXPOSE 8000
-# Default command (can be overridden in docker-compose.yml)
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# Use start.sh which runs migrations and starts gunicorn
+CMD ["/app/start.sh"]
