@@ -22,4 +22,5 @@ RUN python manage.py collectstatic --noinput || true
 # Expose port
 EXPOSE 8000
 # Use start.sh which runs migrations and starts gunicorn
+# Updated: 2025-12-05 - Enhanced logging for debugging
 CMD ["/app/start.sh"]
