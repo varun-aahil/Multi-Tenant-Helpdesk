@@ -1,3 +1,3 @@
-web: gunicorn helpdesk_system.wsgi:application --bind 0.0.0.0:$PORT --log-file -
+web: bash start.sh
 worker: celery -A helpdesk_system worker --beat --loglevel=info --concurrency=2
 
