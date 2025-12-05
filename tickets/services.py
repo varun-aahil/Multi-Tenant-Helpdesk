@@ -161,7 +161,8 @@ class TicketService:
             }
         
         total_seconds = int(delta.total_seconds())
-        is_overdue = total_seconds <= 0
+        # Don't mark as overdue if ticket is resolved or closed
+        is_overdue = total_seconds <= 0 and ticket.status not in ['Resolved', 'Closed']
         remaining = abs(total_seconds)
         
         days, remainder = divmod(remaining, 86400)
@@ -177,7 +178,10 @@ class TicketService:
                 minutes = 1
             time_str = f"{minutes}m"
         
-        if is_overdue:
+        # If ticket is resolved or closed, show resolved status instead of overdue
+        if ticket.status in ['Resolved', 'Closed']:
+            label = f"Resolved"
+        elif is_overdue:
             label = f"Overdue by {time_str}"
         else:
             label = f"Escalates in {time_str}"
