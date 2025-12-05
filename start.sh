@@ -30,11 +30,16 @@ from django.conf import settings
 print(f'Database: {settings.DATABASES[\"default\"][\"HOST\"]}')
 print(f'DEBUG: {settings.DEBUG}')
 print('✅ Django configuration loaded successfully')
-" || echo "⚠️  Django configuration check failed"
+" 2>&1 || echo "⚠️  Django configuration check failed, but continuing..."
 
 echo ""
 echo "=========================================="
-echo "Starting Gunicorn server on port $PORT..."
+echo "Starting Gunicorn server..."
 echo "=========================================="
+if [ -z "$PORT" ]; then
+    echo "⚠️  PORT environment variable not set, defaulting to 8000"
+    PORT=8000
+fi
+echo "Binding to 0.0.0.0:$PORT"
 exec gunicorn helpdesk_system.wsgi:application --bind 0.0.0.0:$PORT --log-file - --access-logfile - --error-logfile - --timeout 120
 
