@@ -19,7 +19,22 @@ python manage.py migrate_schemas --verbosity=2
 
 echo ""
 echo "=========================================="
-echo "Starting Gunicorn server..."
+echo "Checking Django configuration..."
 echo "=========================================="
-exec gunicorn helpdesk_system.wsgi:application --bind 0.0.0.0:$PORT --log-file -
+python -c "
+import os
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'helpdesk_system.settings')
+import django
+django.setup()
+from django.conf import settings
+print(f'Database: {settings.DATABASES[\"default\"][\"HOST\"]}')
+print(f'DEBUG: {settings.DEBUG}')
+print('✅ Django configuration loaded successfully')
+" || echo "⚠️  Django configuration check failed"
+
+echo ""
+echo "=========================================="
+echo "Starting Gunicorn server on port $PORT..."
+echo "=========================================="
+exec gunicorn helpdesk_system.wsgi:application --bind 0.0.0.0:$PORT --log-file - --access-logfile - --error-logfile - --timeout 120
 
