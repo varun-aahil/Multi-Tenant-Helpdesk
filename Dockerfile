@@ -21,7 +21,14 @@ RUN python manage.py collectstatic --noinput || true
 
 # Expose port
 EXPOSE 8000
-# Use start.sh which runs migrations and starts gunicorn
-# Updated: 2025-12-05 - Enhanced logging for debugging
-# Use shell form to ensure bash executes the script
-CMD ["/bin/bash", "/app/start.sh"]
+
+# Run migrations and start gunicorn directly
+# This ensures the commands run even if Railway has issues with script execution
+CMD /bin/bash -c "echo '=== CONTAINER STARTING ===' && \
+python manage.py ensure_tables || echo 'ensure_tables skipped' && \
+echo '=== Running shared migrations ===' && \
+python manage.py migrate_schemas --shared --verbosity=2 && \
+echo '=== Running all migrations ===' && \
+python manage.py migrate_schemas --verbosity=2 && \
+echo '=== Starting Gunicorn ===' && \
+exec gunicorn helpdesk_system.wsgi:application --bind 0.0.0.0:${PORT:-8000} --log-file - --access-logfile - --error-logfile - --timeout 120"
