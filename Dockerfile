@@ -23,4 +23,5 @@ RUN python manage.py collectstatic --noinput || true
 EXPOSE 8000
 # Use start.sh which runs migrations and starts gunicorn
 # Updated: 2025-12-05 - Enhanced logging for debugging
-CMD ["/app/start.sh"]
+# Use shell form to ensure bash executes the script
+CMD ["/bin/bash", "/app/start.sh"]
