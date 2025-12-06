@@ -332,7 +332,16 @@ def customer_kb_article(request, article_id):
 # ==================== Admin Panel Views ====================
 
 def admin_login(request):
-    """Admin login page - returns token"""
+    """Admin login page - returns token or redirects to Django admin"""
+    # Handle GET request - show login form
+    if request.method == 'GET':
+        # Check if user is already logged in (for Django admin)
+        if request.user.is_authenticated and request.user.is_staff:
+            next_url = request.GET.get('next', '/admin/')
+            return redirect(next_url)
+        return render(request, 'frontend/admin/login.html')
+    
+    # Handle POST request - process login
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')

@@ -36,10 +36,13 @@ def debug_test_view(request):
 def simple_test(request):
     return HttpResponse("SIMPLE TEST WORKS!")
 
+# Import admin login view to override Django admin login
+from frontend import views as frontend_views
+
 urlpatterns = [
     path('simple-test/', simple_test, name='simple_test'),  # Simplest possible test
-    # Override admin login to use our custom login view
-    path('admin/login/', include('frontend.urls')),  # This will be handled by frontend.urls
+    # Override admin login to use our custom login view (must come before admin.site.urls)
+    path('admin/login/', frontend_views.admin_login, name='admin:login'),
     path('admin/', admin.site.urls),
     path('api/', include('tickets.urls')),
     path('api/', include('knowledgebase.urls')),
