@@ -338,6 +338,20 @@ def admin_login(request):
         password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
         
+        # Debug logging
+        import logging
+        logger = logging.getLogger(__name__)
+        if user:
+            logger.warning(f'[admin_login] User authenticated: {username}, is_staff={user.is_staff}, is_active={user.is_active}')
+        else:
+            logger.warning(f'[admin_login] Authentication failed for username: {username}')
+            # Check if user exists
+            try:
+                existing_user = User.objects.get(username=username)
+                logger.warning(f'[admin_login] User exists but auth failed: is_staff={existing_user.is_staff}, is_active={existing_user.is_active}')
+            except User.DoesNotExist:
+                logger.warning(f'[admin_login] User does not exist: {username}')
+        
         if user and user.is_staff:
             # Generate JWT tokens
             refresh = RefreshToken.for_user(user)
@@ -351,7 +365,10 @@ def admin_login(request):
             })
             return response
         else:
-            messages.error(request, 'Invalid credentials or not a staff user')
+            if user and not user.is_staff:
+                messages.error(request, 'User exists but is not a staff user. Please contact administrator.')
+            else:
+                messages.error(request, 'Invalid credentials or not a staff user')
     
     return render(request, 'frontend/admin/login.html')
 

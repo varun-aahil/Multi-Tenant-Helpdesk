@@ -59,7 +59,7 @@ class Command(BaseCommand):
                     )
                 )
         
-        # Verify the user was created correctly
+        # Verify the user was created correctly and test authentication
         try:
             verify_user = User.objects.get(username=username)
             self.stdout.write(
@@ -68,6 +68,30 @@ class Command(BaseCommand):
                     f'is_superuser={verify_user.is_superuser}, is_active={verify_user.is_active}'
                 )
             )
+            
+            # Test authentication
+            from django.contrib.auth import authenticate
+            test_auth = authenticate(username=username, password=password)
+            if test_auth:
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f'✅ Authentication test PASSED: User can authenticate with provided password'
+                    )
+                )
+            else:
+                self.stdout.write(
+                    self.style.ERROR(
+                        f'❌ Authentication test FAILED: User cannot authenticate with provided password!'
+                    )
+                )
+                # Try to reset password again
+                verify_user.set_password(password)
+                verify_user.save()
+                self.stdout.write(
+                    self.style.WARNING(
+                        f'⚠️  Password reset attempted. Please try logging in again.'
+                    )
+                )
         except User.DoesNotExist:
             self.stdout.write(
                 self.style.ERROR(
