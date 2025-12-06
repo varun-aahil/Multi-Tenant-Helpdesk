@@ -4,7 +4,7 @@ Usage: python manage.py create_admin_user --username root --password varun16728.
 """
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
-from django.db import transaction
+from django.db import transaction, connection
 
 User = get_user_model()
 
@@ -34,8 +34,10 @@ class Command(BaseCommand):
             if email:
                 user.email = email
             user.save()
-            # Force commit by accessing the user again
-            User.objects.get(username=username)
+            # Force commit by closing the connection
+            connection.close()
+            # Re-query to verify
+            user = User.objects.get(username=username)
             self.stdout.write(
                 self.style.WARNING(
                     f'⚠️  User "{username}" already exists. Updated password and admin privileges.'
@@ -56,8 +58,10 @@ class Command(BaseCommand):
                 is_superuser=True,
                 is_active=True
             )
-            # Force commit by accessing the user again
-            User.objects.get(username=username)
+            # Force commit by closing the connection
+            connection.close()
+            # Re-query to verify
+            user = User.objects.get(username=username)
             self.stdout.write(
                 self.style.SUCCESS(
                     f'✅ Created admin user: {username} (is_staff=True, is_superuser=True, is_active=True)'
