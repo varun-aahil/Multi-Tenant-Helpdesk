@@ -37,6 +37,11 @@ class Command(BaseCommand):
                     f'⚠️  User "{username}" already exists. Updated password and admin privileges.'
                 )
             )
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f'   User details: is_staff={user.is_staff}, is_superuser={user.is_superuser}, is_active={user.is_active}'
+                )
+            )
         else:
             # Create new user
             with transaction.atomic():
@@ -45,19 +50,37 @@ class Command(BaseCommand):
                     password=password,
                     email=email,
                     is_staff=True,
-                    is_superuser=True
+                    is_superuser=True,
+                    is_active=True
                 )
                 self.stdout.write(
                     self.style.SUCCESS(
-                        f'✅ Created admin user: {username} (is_staff=True, is_superuser=True)'
+                        f'✅ Created admin user: {username} (is_staff=True, is_superuser=True, is_active=True)'
                     )
                 )
         
+        # Verify the user was created correctly
+        try:
+            verify_user = User.objects.get(username=username)
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f'✅ Verification: User "{username}" exists with is_staff={verify_user.is_staff}, '
+                    f'is_superuser={verify_user.is_superuser}, is_active={verify_user.is_active}'
+                )
+            )
+        except User.DoesNotExist:
+            self.stdout.write(
+                self.style.ERROR(
+                    f'❌ ERROR: User "{username}" was not found after creation!'
+                )
+            )
+        
         self.stdout.write(
             self.style.SUCCESS(
-                f'\n✅ Admin user ready! You can now log in at /admin/ with:\n'
+                f'\n✅ Admin user ready! You can now log in at /admin-login/ with:\n'
                 f'   Username: {username}\n'
                 f'   Password: {password}'
             )
         )
+
 
