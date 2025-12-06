@@ -471,6 +471,11 @@ def admin_dashboard(request):
         messages.error(request, 'Please login as admin')
         return redirect('admin_login')
     
+    # Get tenant information
+    from django_tenants.utils import get_tenant
+    tenant = get_tenant(request)
+    tenant_name = tenant.name if tenant else 'Unknown Tenant'
+    
     # Get statistics
     total_tickets = Ticket.objects.count()
     open_tickets = Ticket.objects.filter(status__in=['New', 'Open', 'In Progress']).count()
@@ -509,6 +514,7 @@ def admin_dashboard(request):
         'tickets_by_status': tickets_by_status,
         'tickets_by_priority': tickets_by_priority,
         'user': user,
+        'tenant_name': tenant_name,
     }
     return render(request, 'frontend/admin/dashboard.html', context)
 
@@ -554,6 +560,11 @@ def admin_tickets(request):
     # Get all users for assignee filter
     users = User.objects.filter(is_staff=True)
     
+    # Get tenant information
+    from django_tenants.utils import get_tenant
+    tenant = get_tenant(request)
+    tenant_name = tenant.name if tenant else 'Unknown Tenant'
+    
     context = {
         'tickets': ticket_list,
         'status_filter': status_filter or '',
@@ -564,6 +575,7 @@ def admin_tickets(request):
         'priority_choices': Ticket.PRIORITY_CHOICES,
         'users': users,
         'user': user,
+        'tenant_name': tenant_name,
     }
     return render(request, 'frontend/admin/tickets.html', context)
 
@@ -622,6 +634,11 @@ def admin_ticket_detail(request, ticket_id):
     # Get all users for assignment
     users = User.objects.filter(is_staff=True)
     
+    # Get tenant information
+    from django_tenants.utils import get_tenant
+    tenant = get_tenant(request)
+    tenant_name = tenant.name if tenant else 'Unknown Tenant'
+    
     context = {
         'ticket': ticket,
         'is_overdue': is_overdue,
@@ -630,6 +647,7 @@ def admin_ticket_detail(request, ticket_id):
         'status_choices': Ticket.STATUS_CHOICES,
         'priority_choices': Ticket.PRIORITY_CHOICES,
         'user': user,
+        'tenant_name': tenant_name,
     }
     return render(request, 'frontend/admin/ticket_detail.html', context)
 
@@ -649,10 +667,16 @@ def admin_customers(request):
             Q(name__icontains=search) | Q(email__icontains=search) | Q(company__icontains=search)
         )
     
+    # Get tenant information
+    from django_tenants.utils import get_tenant
+    tenant = get_tenant(request)
+    tenant_name = tenant.name if tenant else 'Unknown Tenant'
+    
     context = {
         'customers': customers,
         'search': search or '',
         'user': user,
+        'tenant_name': tenant_name,
     }
     return render(request, 'frontend/admin/customers.html', context)
 
@@ -663,6 +687,11 @@ def admin_knowledge_base(request):
     if not user or not user.is_staff:
         messages.error(request, 'Please login as admin')
         return redirect('admin_login')
+    
+    # Get tenant information
+    from django_tenants.utils import get_tenant
+    tenant = get_tenant(request)
+    tenant_name = tenant.name if tenant else 'Unknown Tenant'
     
     articles = KnowledgeBase.objects.select_related('created_by').order_by('-created_at')
     
@@ -696,6 +725,7 @@ def admin_knowledge_base(request):
         'published_filter': published_filter or '',
         'search': search or '',
         'user': user,
+        'tenant_name': tenant_name,
     }
     return render(request, 'frontend/admin/knowledge_base.html', context)
 
@@ -706,6 +736,11 @@ def admin_kb_article_create(request):
     if not user or not user.is_staff:
         messages.error(request, 'Please login as admin')
         return redirect('admin_login')
+    
+    # Get tenant information
+    from django_tenants.utils import get_tenant
+    tenant = get_tenant(request)
+    tenant_name = tenant.name if tenant else 'Unknown Tenant'
     
     if request.method == 'POST':
         title = request.POST.get('title')
@@ -742,8 +777,37 @@ def admin_kb_article_create(request):
     context = {
         'user': user,
         'article': None,  # New article
+        'tenant_name': tenant_name,
     }
     return render(request, 'frontend/admin/kb_article_detail.html', context)
+
+
+def admin_kb_article_delete(request, article_id):
+    """Admin knowledge base article delete"""
+    user = get_user_from_token(request)
+    if not user or not user.is_staff:
+        messages.error(request, 'Please login as admin')
+        return redirect('admin_login')
+    
+    article = get_object_or_404(KnowledgeBase, pk=article_id)
+    
+    if request.method == 'POST':
+        article_title = article.title
+        article.delete()
+        messages.success(request, f'Article "{article_title}" deleted successfully')
+        return redirect('admin_knowledge_base')
+    
+    # Get tenant information
+    from django_tenants.utils import get_tenant
+    tenant = get_tenant(request)
+    tenant_name = tenant.name if tenant else 'Unknown Tenant'
+    
+    context = {
+        'article': article,
+        'user': user,
+        'tenant_name': tenant_name,
+    }
+    return render(request, 'frontend/admin/kb_article_delete_confirm.html', context)
 
 
 def admin_kb_article_detail(request, article_id):
@@ -778,8 +842,14 @@ def admin_kb_article_detail(request, article_id):
         messages.success(request, 'Article updated successfully')
         return redirect('admin_kb_article_detail', article_id=article.id)
     
+    # Get tenant information
+    from django_tenants.utils import get_tenant
+    tenant = get_tenant(request)
+    tenant_name = tenant.name if tenant else 'Unknown Tenant'
+    
     context = {
         'article': article,
         'user': user,
+        'tenant_name': tenant_name,
     }
     return render(request, 'frontend/admin/kb_article_detail.html', context)

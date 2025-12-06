@@ -514,7 +514,7 @@
     <nav class="navbar">
         <div class="navbar-content">
             <a href="{% if user.is_staff %}{% url 'admin_dashboard' %}{% else %}{% url 'customer_dashboard' %}{% endif %}" class="navbar-brand">
-                Helpdesk System
+                Helpdesk System{% if tenant_name %} - {{ tenant_name }}{% endif %}
             </a>
             <div class="navbar-links">
                 <span id="userInfo" style="display: none;">Welcome, <span id="username"></span></span>

@@ -30,5 +30,6 @@ urlpatterns = [
     path('admin-panel/knowledge-base/', views.admin_knowledge_base, name='admin_knowledge_base'),
     path('admin-panel/knowledge-base/create/', views.admin_kb_article_create, name='admin_kb_article_create'),
     path('admin-panel/knowledge-base/<int:article_id>/', views.admin_kb_article_detail, name='admin_kb_article_detail'),
+    path('admin-panel/knowledge-base/<int:article_id>/delete/', views.admin_kb_article_delete, name='admin_kb_article_delete'),
 ]
 
