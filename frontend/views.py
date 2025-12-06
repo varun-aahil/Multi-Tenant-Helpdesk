@@ -403,8 +403,19 @@ def admin_login(request):
             if next_url and next_url.startswith('/admin/'):
                 # Redirect to Django admin - use Django's session auth
                 from django.contrib.auth import login
-                login(request, user)  # This sets up Django session for admin
-                return redirect(next_url)
+                # Ensure we're in tenant context when logging in
+                if tenant:
+                    with tenant_context(tenant):
+                        login(request, user)  # This sets up Django session for admin
+                else:
+                    login(request, user)
+                # Use absolute URL for redirect to avoid issues
+                from django.urls import reverse
+                try:
+                    return redirect(next_url)
+                except Exception as e:
+                    logger.warning(f'[admin_login] Redirect error: {e}, redirecting to /admin/')
+                    return redirect('/admin/')
             
             # Generate JWT tokens for frontend admin panel
             refresh = RefreshToken.for_user(user)

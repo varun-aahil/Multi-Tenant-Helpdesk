@@ -8,4 +8,10 @@ class KnowledgeBaseAdmin(admin.ModelAdmin):
     list_filter = ('is_published', 'category', 'created_at')
     search_fields = ('title', 'content', 'tags')
     readonly_fields = ('view_count', 'created_at', 'updated_at')
+    
+    def save_model(self, request, obj, form, change):
+        """Set created_by to current user if not set"""
+        if not change and not obj.created_by:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
 
