@@ -231,36 +231,36 @@ if default_domain:
             else:
                 print(f'✅ Domain record exists and is correctly configured for {default_domain}')
         
-               # Always ensure migrations are run on existing tenant schema
-               print(f'📦 Ensuring migrations are up to date for tenant schema \"{existing_tenant.schema_name}\"...')
-               try:
-                   with tenant_context(existing_tenant):
-                       call_command('migrate', verbosity=2, interactive=False)
-                       print(f'✅ Migrations verified for tenant schema \"{existing_tenant.schema_name}\"')
-                       
-                       # Setup default SLA policies if they don't exist
-                       print(f'📋 Setting up default SLA policies for tenant schema \"{existing_tenant.schema_name}\"...')
-                       try:
-                           call_command('setup_default_sla_policies', verbosity=1)
-                           print(f'✅ SLA policies verified for tenant schema \"{existing_tenant.schema_name}\"')
-                       except Exception as e:
-                           print(f'⚠️  SLA policy setup failed (non-critical): {e}')
-                       
-                       # Create admin user if it doesn't exist
-                       print(f'👤 Ensuring admin user exists for tenant schema \"{existing_tenant.schema_name}\"...')
-                       try:
-                           call_command('create_admin_user', 
-                                       username='root', 
-                                       password='varun16728...',
-                                       email='admin@example.com',
-                                       verbosity=1)
-                           print(f'✅ Admin user verified for tenant schema \"{existing_tenant.schema_name}\"')
-                       except Exception as e:
-                           print(f'⚠️  Admin user setup failed (non-critical): {e}')
-               except Exception as e:
-                   print(f'⚠️  Migration check failed for tenant schema: {e}')
-                   import traceback
-                   traceback.print_exc()
+        # Always ensure migrations are run on existing tenant schema
+        print(f'📦 Ensuring migrations are up to date for tenant schema \"{existing_tenant.schema_name}\"...')
+        try:
+            with tenant_context(existing_tenant):
+                call_command('migrate', verbosity=2, interactive=False)
+                print(f'✅ Migrations verified for tenant schema \"{existing_tenant.schema_name}\"')
+                
+                # Setup default SLA policies if they don't exist
+                print(f'📋 Setting up default SLA policies for tenant schema \"{existing_tenant.schema_name}\"...')
+                try:
+                    call_command('setup_default_sla_policies', verbosity=1)
+                    print(f'✅ SLA policies verified for tenant schema \"{existing_tenant.schema_name}\"')
+                except Exception as e:
+                    print(f'⚠️  SLA policy setup failed (non-critical): {e}')
+                
+                # Create admin user if it doesn't exist
+                print(f'👤 Ensuring admin user exists for tenant schema \"{existing_tenant.schema_name}\"...')
+                try:
+                    call_command('create_admin_user', 
+                                username='root', 
+                                password='varun16728...',
+                                email='admin@example.com',
+                                verbosity=1)
+                    print(f'✅ Admin user verified for tenant schema \"{existing_tenant.schema_name}\"')
+                except Exception as e:
+                    print(f'⚠️  Admin user setup failed (non-critical): {e}')
+        except Exception as e:
+            print(f'⚠️  Migration check failed for tenant schema: {e}')
+            import traceback
+            traceback.print_exc()
 else:
     print('⚠️  Could not determine domain for tenant creation')
     print('   Options:')
