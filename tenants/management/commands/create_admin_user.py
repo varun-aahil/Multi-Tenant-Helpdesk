@@ -21,52 +21,62 @@ class Command(BaseCommand):
         """Create the admin user"""
         username = options['username']
         password = options['password']
-        email = options.get('email', '')
+        email = options.get('email', 'admin@example.com')
         
-        # Force create/update user - ensure it's committed
+        # Use get_or_create to ensure user exists
+        user, created = User.objects.get_or_create(
+            username=username,
+            defaults={
+                'email': email,
+                'is_staff': True,
+                'is_superuser': True,
+                'is_active': True,
+            }
+        )
+        
+        # Always update password and permissions (in case user already existed)
+        user.set_password(password)
+        user.is_staff = True
+        user.is_superuser = True
+        user.is_active = True
+        if email:
+            user.email = email
+        user.save()
+        
+        # Force commit by closing and reopening connection
+        connection.close()
+        
+        # Wait a moment and verify
+        import time
+        time.sleep(0.1)
+        
+        # Re-query to verify persistence
         try:
-            user = User.objects.get(username=username)
-            # User exists, update it
-            user.set_password(password)
-            user.is_staff = True
-            user.is_superuser = True
-            user.is_active = True
-            if email:
-                user.email = email
-            user.save()
-            # Force commit by closing the connection
-            connection.close()
-            # Re-query to verify
-            user = User.objects.get(username=username)
-            self.stdout.write(
-                self.style.WARNING(
-                    f'⚠️  User "{username}" already exists. Updated password and admin privileges.'
+            verify_user = User.objects.get(username=username)
+            if created:
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f'✅ Created admin user: {username} (is_staff=True, is_superuser=True, is_active=True)'
+                    )
                 )
-            )
+            else:
+                self.stdout.write(
+                    self.style.WARNING(
+                        f'⚠️  User "{username}" already exists. Updated password and admin privileges.'
+                    )
+                )
             self.stdout.write(
                 self.style.SUCCESS(
-                    f'   User details: is_staff={user.is_staff}, is_superuser={user.is_superuser}, is_active={user.is_active}'
+                    f'   User details: is_staff={verify_user.is_staff}, is_superuser={verify_user.is_superuser}, is_active={verify_user.is_active}'
                 )
             )
         except User.DoesNotExist:
-            # Create new user
-            user = User.objects.create_user(
-                username=username,
-                password=password,
-                email=email,
-                is_staff=True,
-                is_superuser=True,
-                is_active=True
-            )
-            # Force commit by closing the connection
-            connection.close()
-            # Re-query to verify
-            user = User.objects.get(username=username)
             self.stdout.write(
-                self.style.SUCCESS(
-                    f'✅ Created admin user: {username} (is_staff=True, is_superuser=True, is_active=True)'
+                self.style.ERROR(
+                    f'❌ ERROR: User "{username}" was not found after creation!'
                 )
             )
+            return
         
         # Verify the user was created correctly and test authentication
         try:
