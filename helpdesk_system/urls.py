@@ -32,7 +32,12 @@ def debug_test_view(request):
     
     return HttpResponse(f"Debug Test View - {tenant_info} - Path: {request.path}")
 
+# Simple test view that doesn't depend on any imports
+def simple_test(request):
+    return HttpResponse("SIMPLE TEST WORKS!")
+
 urlpatterns = [
+    path('simple-test/', simple_test, name='simple_test'),  # Simplest possible test
     path('admin/', admin.site.urls),
     path('api/', include('tickets.urls')),
     path('api/', include('knowledgebase.urls')),
