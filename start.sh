@@ -168,6 +168,16 @@ if default_domain:
                     call_command('migrate', verbosity=1, interactive=False)
             
             print(f'✅ Successfully created/updated tenant \"{default_name}\" for domain {default_domain}')
+            
+            # Verify Domain record exists and is queryable
+            try:
+                verify_domain = Domain.objects.filter(domain=default_domain).first()
+                if verify_domain:
+                    print(f'✅ Verification: Domain record exists for {default_domain}, points to tenant: {verify_domain.tenant.name}')
+                else:
+                    print(f'⚠️  WARNING: Domain record not found after creation!')
+            except Exception as e:
+                print(f'⚠️  WARNING: Could not verify Domain record: {e}')
         except Exception as e:
             print(f'⚠️  Failed to create default tenant: {e}')
             import traceback
