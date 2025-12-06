@@ -139,6 +139,7 @@ if default_domain:
                     tenant.save()
             
             # Create or update Domain record (this is what django-tenants uses for routing)
+            print(f'🔗 Creating/updating Domain record for {default_domain}...')
             domain, created = Domain.objects.get_or_create(
                 domain=default_domain,
                 defaults={
@@ -146,13 +147,19 @@ if default_domain:
                     'is_primary': True
                 }
             )
-            if not created:
+            if created:
+                print(f'✅ Created new Domain record for {default_domain}')
+            else:
                 # Domain exists but might point to wrong tenant - update it
+                print(f'📝 Domain record already exists, checking if update needed...')
                 if domain.tenant != tenant:
                     print(f'📝 Updating Domain record to point to correct tenant')
                     domain.tenant = tenant
                     domain.is_primary = True
                     domain.save()
+                    print(f'✅ Updated Domain record')
+                else:
+                    print(f'✅ Domain record already correctly configured')
             
             # Run migrations on tenant schema if needed
             if not schema_exists:
@@ -167,20 +174,32 @@ if default_domain:
             traceback.print_exc()
     else:
         # Tenant exists, but ensure Domain record exists too
-        if not Domain.objects.filter(domain=default_domain).exists():
+        print(f'🔍 Checking if Domain record exists for {default_domain}...')
+        domain_obj = Domain.objects.filter(domain=default_domain).first()
+        if not domain_obj:
             print(f'🔧 Adding Domain record for existing tenant: {default_domain}')
             try:
-                domain = Domain(
+                domain_obj = Domain(
                     domain=default_domain,
                     tenant=existing_tenant,
                     is_primary=True
                 )
-                domain.save()
+                domain_obj.save()
                 print(f'✅ Added Domain record for {default_domain}')
             except Exception as e:
                 print(f'⚠️  Failed to add Domain record: {e}')
+                import traceback
+                traceback.print_exc()
         else:
-            print(f'✅ Default tenant already exists for domain {default_domain}')
+            # Verify it points to the correct tenant
+            if domain_obj.tenant != existing_tenant:
+                print(f'📝 Updating Domain record to point to correct tenant')
+                domain_obj.tenant = existing_tenant
+                domain_obj.is_primary = True
+                domain_obj.save()
+                print(f'✅ Updated Domain record')
+            else:
+                print(f'✅ Domain record exists and is correctly configured for {default_domain}')
 else:
     print('⚠️  Could not determine domain for tenant creation')
     print('   Options:')
