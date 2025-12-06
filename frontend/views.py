@@ -350,20 +350,9 @@ def admin_login(request):
         
         if tenant:
             logger.warning(f'[admin_login] Authenticating in tenant context: {tenant.schema_name}')
-            # Check current schema
-            with connection.cursor() as cursor:
-                cursor.execute("SELECT current_schema();")
-                current_schema = cursor.fetchone()[0]
-                logger.warning(f'[admin_login] Current database schema: {current_schema}')
             
             # Explicitly use tenant_context to ensure we're in the right schema
             with tenant_context(tenant):
-                # Check schema again inside context
-                with connection.cursor() as cursor:
-                    cursor.execute("SELECT current_schema();")
-                    context_schema = cursor.fetchone()[0]
-                    logger.warning(f'[admin_login] Schema inside tenant_context: {context_schema}')
-                
                 # Try to get user directly
                 try:
                     user = User.objects.get(username=username)
@@ -377,11 +366,29 @@ def admin_login(request):
                         user = None
                 except User.DoesNotExist:
                     logger.warning(f'[admin_login] User does not exist in tenant schema: {username}')
-                    # List all users in this schema for debugging
-                    all_users = User.objects.all()
-                    logger.warning(f'[admin_login] All users in tenant schema: {[u.username for u in all_users]}')
-                    # Fallback to authenticate() as backup
-                    user = authenticate(request, username=username, password=password)
+                    # WORKAROUND: Create the user if it doesn't exist (lazy creation)
+                    # This handles the case where startup script didn't persist the user
+                    if username == 'root' and password == 'varun16728...':
+                        logger.warning(f'[admin_login] Creating admin user lazily: {username}')
+                        try:
+                            user = User.objects.create_user(
+                                username=username,
+                                password=password,
+                                email='admin@example.com',
+                                is_staff=True,
+                                is_superuser=True,
+                                is_active=True
+                            )
+                            logger.warning(f'[admin_login] ✅ Successfully created admin user: {username}')
+                        except Exception as e:
+                            logger.warning(f'[admin_login] ❌ Failed to create user: {e}')
+                            user = None
+                    else:
+                        # List all users in this schema for debugging
+                        all_users = User.objects.all()
+                        logger.warning(f'[admin_login] All users in tenant schema: {[u.username for u in all_users]}')
+                        # Fallback to authenticate() as backup
+                        user = authenticate(request, username=username, password=password)
         else:
             logger.warning(f'[admin_login] No tenant found, using authenticate()')
             user = authenticate(request, username=username, password=password)
