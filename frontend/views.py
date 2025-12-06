@@ -336,21 +336,42 @@ def admin_login(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-        user = authenticate(request, username=username, password=password)
         
         # Debug logging
         import logging
         logger = logging.getLogger(__name__)
+        
+        # Ensure we're in the tenant context for authentication
+        from django_tenants.utils import get_tenant, tenant_context
+        tenant = get_tenant(request)
+        
+        if tenant:
+            logger.warning(f'[admin_login] Authenticating in tenant context: {tenant.schema_name}')
+            # Authenticate within tenant context
+            with tenant_context(tenant):
+                user = authenticate(request, username=username, password=password)
+        else:
+            logger.warning(f'[admin_login] No tenant found, authenticating in public schema')
+            user = authenticate(request, username=username, password=password)
+        
         if user:
             logger.warning(f'[admin_login] User authenticated: {username}, is_staff={user.is_staff}, is_active={user.is_active}')
         else:
             logger.warning(f'[admin_login] Authentication failed for username: {username}')
-            # Check if user exists
-            try:
-                existing_user = User.objects.get(username=username)
-                logger.warning(f'[admin_login] User exists but auth failed: is_staff={existing_user.is_staff}, is_active={existing_user.is_active}')
-            except User.DoesNotExist:
-                logger.warning(f'[admin_login] User does not exist: {username}')
+            # Check if user exists in tenant schema
+            if tenant:
+                try:
+                    with tenant_context(tenant):
+                        existing_user = User.objects.get(username=username)
+                        logger.warning(f'[admin_login] User exists in tenant schema but auth failed: is_staff={existing_user.is_staff}, is_active={existing_user.is_active}')
+                except User.DoesNotExist:
+                    logger.warning(f'[admin_login] User does not exist in tenant schema: {username}')
+            else:
+                try:
+                    existing_user = User.objects.get(username=username)
+                    logger.warning(f'[admin_login] User exists in public schema but auth failed: is_staff={existing_user.is_staff}, is_active={existing_user.is_active}')
+                except User.DoesNotExist:
+                    logger.warning(f'[admin_login] User does not exist: {username}')
         
         if user and user.is_staff:
             # Generate JWT tokens
