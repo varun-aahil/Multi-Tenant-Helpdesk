@@ -114,6 +114,11 @@ TENANT_MODEL = "tenants.Client"
 TENANT_DOMAIN_MODEL = "tenants.Domain"
 SHOW_PUBLIC_IF_NO_TENANT_FOUND = True
 
+# Debug: Log all URL resolution attempts
+import logging
+logger = logging.getLogger('django.request')
+logger.setLevel(logging.WARNING)
+
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
