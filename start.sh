@@ -271,6 +271,12 @@ else:
 
 echo ""
 echo "=========================================="
+echo "Collecting static files..."
+echo "=========================================="
+python manage.py collectstatic --noinput || echo "⚠️  collectstatic failed, but continuing..."
+
+echo ""
+echo "=========================================="
 echo "Starting Gunicorn server..."
 echo "=========================================="
 if [ -z "$PORT" ]; then

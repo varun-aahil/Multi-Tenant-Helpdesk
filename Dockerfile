@@ -16,8 +16,7 @@ COPY . /app/
 # Make start script executable
 RUN chmod +x /app/start.sh
 
-# Collect static files (for production)
-RUN python manage.py collectstatic --noinput || true
+# Note: collectstatic is run at runtime in start.sh to ensure proper environment setup
 
 # Expose port
 EXPOSE 8000
