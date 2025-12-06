@@ -38,8 +38,8 @@ django.setup()
 from django.conf import settings
 print(f'Database: {settings.DATABASES[\"default\"][\"HOST\"]}')
 print(f'DEBUG: {settings.DEBUG}')
-print('✅ Django configuration loaded successfully')
-" 2>&1 || echo "⚠️  Django configuration check failed, but continuing..."
+print('Django configuration loaded successfully')
+" 2>&1 || echo "WARNING  Django configuration check failed, but continuing..."
 
 echo ""
 echo "=========================================="
@@ -68,7 +68,7 @@ if not default_domain:
         parsed = urlparse(render_url)
         if parsed.netloc:
             default_domain = parsed.netloc
-            print(f'📋 Detected domain from Render service URL: {default_domain}')
+            print(f' Detected domain from Render service URL: {default_domain}')
 
 # If still no domain, try to get from ALLOWED_HOSTS
 if not default_domain:
@@ -78,7 +78,7 @@ if not default_domain:
         for host in settings.ALLOWED_HOSTS:
             if host and host != '*' and '.' in host and 'localhost' not in host.lower():
                 default_domain = host
-                print(f'📋 Detected domain from ALLOWED_HOSTS: {default_domain}')
+                print(f' Detected domain from ALLOWED_HOSTS: {default_domain}')
                 break
 
 # Also check Domain model (django-tenants uses this for routing)
@@ -100,17 +100,17 @@ if default_domain:
     if Client.objects.filter(domain_url=default_domain).exists():
         tenant_exists = True
         existing_tenant = Client.objects.filter(domain_url=default_domain).first()
-        print(f'✅ Tenant found by domain_url: {default_domain}')
+        print(f'SUCCESS Tenant found by domain_url: {default_domain}')
     
     # Also check Domain model (this is what django-tenants actually uses)
     if Domain.objects.filter(domain=default_domain).exists():
         tenant_exists = True
         domain_obj = Domain.objects.filter(domain=default_domain).first()
         existing_tenant = domain_obj.tenant
-        print(f'✅ Tenant found by Domain model: {default_domain}')
+        print(f'SUCCESS Tenant found by Domain model: {default_domain}')
     
     if not tenant_exists:
-        print(f'🔧 Creating default tenant: {default_name} ({default_schema}) for domain {default_domain}')
+        print(f' Creating default tenant: {default_name} ({default_schema}) for domain {default_domain}')
         try:
             # Check if schema already exists (from a previous tenant creation)
             schema_exists = False
@@ -134,12 +134,12 @@ if default_domain:
                 tenant = Client.objects.filter(schema_name=default_schema).first()
                 # Update domain_url if different
                 if tenant.domain_url != default_domain:
-                    print(f'📝 Updating tenant domain_url from {tenant.domain_url} to {default_domain}')
+                    print(f' Updating tenant domain_url from {tenant.domain_url} to {default_domain}')
                     tenant.domain_url = default_domain
                     tenant.save()
             
             # Create or update Domain record (this is what django-tenants uses for routing)
-            print(f'🔗 Creating/updating Domain record for {default_domain}...')
+            print(f' Creating/updating Domain record for {default_domain}...')
             domain, created = Domain.objects.get_or_create(
                 domain=default_domain,
                 defaults={
@@ -148,66 +148,66 @@ if default_domain:
                 }
             )
             if created:
-                print(f'✅ Created new Domain record for {default_domain}')
+                print(f'SUCCESS Created new Domain record for {default_domain}')
             else:
                 # Domain exists but might point to wrong tenant - update it
-                print(f'📝 Domain record already exists, checking if update needed...')
+                print(f' Domain record already exists, checking if update needed...')
                 if domain.tenant != tenant:
-                    print(f'📝 Updating Domain record to point to correct tenant')
+                    print(f' Updating Domain record to point to correct tenant')
                     domain.tenant = tenant
                     domain.is_primary = True
                     domain.save()
-                    print(f'✅ Updated Domain record')
+                    print(f'SUCCESS Updated Domain record')
                 else:
-                    print(f'✅ Domain record already correctly configured')
+                    print(f'SUCCESS Domain record already correctly configured')
             
             # Run migrations on tenant schema (always run to ensure tables exist)
-            print(f'📦 Running migrations on tenant schema \"{default_schema}\"...')
+            print(f' Running migrations on tenant schema \"{default_schema}\"...')
             with tenant_context(tenant):
                 call_command('migrate', verbosity=2, interactive=False)
-                print(f'✅ Migrations completed for tenant schema \"{default_schema}\"')
+                print(f'SUCCESS Migrations completed for tenant schema \"{default_schema}\"')
                 
                 # Setup default SLA policies
-                print(f'📋 Setting up default SLA policies for tenant schema \"{default_schema}\"...')
+                print(f' Setting up default SLA policies for tenant schema \"{default_schema}\"...')
                 try:
                     call_command('setup_default_sla_policies', verbosity=1)
-                    print(f'✅ SLA policies created for tenant schema \"{default_schema}\"')
+                    print(f'SUCCESS SLA policies created for tenant schema \"{default_schema}\"')
                 except Exception as e:
-                    print(f'⚠️  SLA policy setup failed (non-critical): {e}')
+                    print(f'WARNING  SLA policy setup failed (non-critical): {e}')
                 
                 # Create admin user
-                print(f'👤 Creating admin user for tenant schema \"{default_schema}\"...')
+                print(f' Creating admin user for tenant schema \"{default_schema}\"...')
                 try:
                     call_command('create_admin_user', 
                                 username='root', 
                                 password='varun16728...',
                                 email='admin@example.com',
                                 verbosity=1)
-                    print(f'✅ Admin user created for tenant schema \"{default_schema}\"')
+                    print(f'SUCCESS Admin user created for tenant schema \"{default_schema}\"')
                 except Exception as e:
-                    print(f'⚠️  Admin user creation failed (non-critical): {e}')
+                    print(f'WARNING  Admin user creation failed (non-critical): {e}')
             
-            print(f'✅ Successfully created/updated tenant \"{default_name}\" for domain {default_domain}')
+            print(f'SUCCESS Successfully created/updated tenant \"{default_name}\" for domain {default_domain}')
             
             # Verify Domain record exists and is queryable
             try:
                 verify_domain = Domain.objects.filter(domain=default_domain).first()
                 if verify_domain:
-                    print(f'✅ Verification: Domain record exists for {default_domain}, points to tenant: {verify_domain.tenant.name}')
+                    print(f'SUCCESS Verification: Domain record exists for {default_domain}, points to tenant: {verify_domain.tenant.name}')
                 else:
-                    print(f'⚠️  WARNING: Domain record not found after creation!')
+                    print(f'WARNING  WARNING: Domain record not found after creation!')
             except Exception as e:
-                print(f'⚠️  WARNING: Could not verify Domain record: {e}')
+                print(f'WARNING  WARNING: Could not verify Domain record: {e}')
         except Exception as e:
-            print(f'⚠️  Failed to create default tenant: {e}')
+            print(f'WARNING  Failed to create default tenant: {e}')
             import traceback
             traceback.print_exc()
     else:
         # Tenant exists, but ensure Domain record exists too
-        print(f'🔍 Checking if Domain record exists for {default_domain}...')
+        print(f' Checking if Domain record exists for {default_domain}...')
         domain_obj = Domain.objects.filter(domain=default_domain).first()
         if not domain_obj:
-            print(f'🔧 Adding Domain record for existing tenant: {default_domain}')
+            print(f' Adding Domain record for existing tenant: {default_domain}')
             try:
                 domain_obj = Domain(
                     domain=default_domain,
@@ -215,72 +215,72 @@ if default_domain:
                     is_primary=True
                 )
                 domain_obj.save()
-                print(f'✅ Added Domain record for {default_domain}')
+                print(f'SUCCESS Added Domain record for {default_domain}')
             except Exception as e:
-                print(f'⚠️  Failed to add Domain record: {e}')
+                print(f'WARNING  Failed to add Domain record: {e}')
                 import traceback
                 traceback.print_exc()
         else:
             # Verify it points to the correct tenant
             if domain_obj.tenant != existing_tenant:
-                print(f'📝 Updating Domain record to point to correct tenant')
+                print(f' Updating Domain record to point to correct tenant')
                 domain_obj.tenant = existing_tenant
                 domain_obj.is_primary = True
                 domain_obj.save()
-                print(f'✅ Updated Domain record')
+                print(f'SUCCESS Updated Domain record')
             else:
-                print(f'✅ Domain record exists and is correctly configured for {default_domain}')
+                print(f'SUCCESS Domain record exists and is correctly configured for {default_domain}')
         
         # Always ensure migrations are run on existing tenant schema
-        print(f'📦 Ensuring migrations are up to date for tenant schema \"{existing_tenant.schema_name}\"...')
+        print(f' Ensuring migrations are up to date for tenant schema \"{existing_tenant.schema_name}\"...')
         try:
             with tenant_context(existing_tenant):
                 call_command('migrate', verbosity=2, interactive=False)
-                print(f'✅ Migrations verified for tenant schema \"{existing_tenant.schema_name}\"')
+                print(f'SUCCESS Migrations verified for tenant schema \"{existing_tenant.schema_name}\"')
                 
                 # Setup default SLA policies if they don't exist
-                print(f'📋 Setting up default SLA policies for tenant schema \"{existing_tenant.schema_name}\"...')
+                print(f' Setting up default SLA policies for tenant schema \"{existing_tenant.schema_name}\"...')
                 try:
                     call_command('setup_default_sla_policies', verbosity=1)
-                    print(f'✅ SLA policies verified for tenant schema \"{existing_tenant.schema_name}\"')
+                    print(f'SUCCESS SLA policies verified for tenant schema \"{existing_tenant.schema_name}\"')
                 except Exception as e:
-                    print(f'⚠️  SLA policy setup failed (non-critical): {e}')
+                    print(f'WARNING  SLA policy setup failed (non-critical): {e}')
                 
                 # Create admin user if it doesn't exist
-                print(f'👤 Ensuring admin user exists for tenant schema \"{existing_tenant.schema_name}\"...')
+                print(f' Ensuring admin user exists for tenant schema \"{existing_tenant.schema_name}\"...')
                 try:
                     call_command('create_admin_user', 
                                 username='root', 
                                 password='varun16728...',
                                 email='admin@example.com',
                                 verbosity=1)
-                    print(f'✅ Admin user verified for tenant schema \"{existing_tenant.schema_name}\"')
+                    print(f'SUCCESS Admin user verified for tenant schema \"{existing_tenant.schema_name}\"')
                 except Exception as e:
-                    print(f'⚠️  Admin user setup failed (non-critical): {e}')
+                    print(f'WARNING  Admin user setup failed (non-critical): {e}')
         except Exception as e:
-            print(f'⚠️  Migration check failed for tenant schema: {e}')
+            print(f'WARNING  Migration check failed for tenant schema: {e}')
             import traceback
             traceback.print_exc()
 else:
-    print('⚠️  Could not determine domain for tenant creation')
+    print('WARNING  Could not determine domain for tenant creation')
     print('   Options:')
     print('   1. Set DEFAULT_TENANT_DOMAIN environment variable')
     print('   2. Ensure ALLOWED_HOSTS contains your domain')
     print('   3. Create tenant manually when you have shell access')
-" 2>&1 || echo "⚠️  Tenant creation check failed, but continuing..."
+" 2>&1 || echo "WARNING  Tenant creation check failed, but continuing..."
 
 echo ""
 echo "=========================================="
 echo "Collecting static files..."
 echo "=========================================="
-python manage.py collectstatic --noinput || echo "⚠️  collectstatic failed, but continuing..."
+python manage.py collectstatic --noinput || echo "WARNING  collectstatic failed, but continuing..."
 
 echo ""
 echo "=========================================="
 echo "Starting Gunicorn server..."
 echo "=========================================="
 if [ -z "$PORT" ]; then
-    echo "⚠️  PORT environment variable not set, defaulting to 8000"
+    echo "WARNING  PORT environment variable not set, defaulting to 8000"
     PORT=8000
 fi
 echo "Binding to 0.0.0.0:$PORT"

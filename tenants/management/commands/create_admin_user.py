@@ -56,13 +56,13 @@ class Command(BaseCommand):
             if created:
                 self.stdout.write(
                     self.style.SUCCESS(
-                        f'✅ Created admin user: {username} (is_staff=True, is_superuser=True, is_active=True)'
+                        f'Created admin user: {username} (is_staff=True, is_superuser=True, is_active=True)'
                     )
                 )
             else:
                 self.stdout.write(
                     self.style.WARNING(
-                        f'⚠️  User "{username}" already exists. Updated password and admin privileges.'
+                        f'User "{username}" already exists. Updated password and admin privileges.'
                     )
                 )
             self.stdout.write(
@@ -73,7 +73,7 @@ class Command(BaseCommand):
         except User.DoesNotExist:
             self.stdout.write(
                 self.style.ERROR(
-                    f'❌ ERROR: User "{username}" was not found after creation!'
+                    f'ERROR: User "{username}" was not found after creation!'
                 )
             )
             return
@@ -83,7 +83,7 @@ class Command(BaseCommand):
             verify_user = User.objects.get(username=username)
             self.stdout.write(
                 self.style.SUCCESS(
-                    f'✅ Verification: User "{username}" exists with is_staff={verify_user.is_staff}, '
+                    f'Verification: User "{username}" exists with is_staff={verify_user.is_staff}, '
                     f'is_superuser={verify_user.is_superuser}, is_active={verify_user.is_active}'
                 )
             )
@@ -94,13 +94,13 @@ class Command(BaseCommand):
             if test_auth:
                 self.stdout.write(
                     self.style.SUCCESS(
-                        f'✅ Authentication test PASSED: User can authenticate with provided password'
+                        f'Authentication test PASSED: User can authenticate with provided password'
                     )
                 )
             else:
                 self.stdout.write(
                     self.style.ERROR(
-                        f'❌ Authentication test FAILED: User cannot authenticate with provided password!'
+                        f'Authentication test FAILED: User cannot authenticate with provided password!'
                     )
                 )
                 # Try to reset password again
@@ -108,19 +108,19 @@ class Command(BaseCommand):
                 verify_user.save()
                 self.stdout.write(
                     self.style.WARNING(
-                        f'⚠️  Password reset attempted. Please try logging in again.'
+                        f'Password reset attempted. Please try logging in again.'
                     )
                 )
         except User.DoesNotExist:
             self.stdout.write(
                 self.style.ERROR(
-                    f'❌ ERROR: User "{username}" was not found after creation!'
+                    f'ERROR: User "{username}" was not found after creation!'
                 )
             )
         
         self.stdout.write(
             self.style.SUCCESS(
-                f'\n✅ Admin user ready! You can now log in at /admin-login/ with:\n'
+                f'\nAdmin user ready! You can now log in at /admin-login/ with:\n'
                 f'   Username: {username}\n'
                 f'   Password: {password}'
             )

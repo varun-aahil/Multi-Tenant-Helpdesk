@@ -395,9 +395,9 @@ def admin_login(request):
                                 is_superuser=True,
                                 is_active=True
                             )
-                            logger.warning(f'[admin_login] ✅ Successfully created admin user: {username}')
+                            logger.warning(f'[admin_login] Successfully created admin user: {username}')
                         except Exception as e:
-                            logger.warning(f'[admin_login] ❌ Failed to create user: {e}')
+                            logger.warning(f'[admin_login] Failed to create user: {e}')
                             user = None
                     else:
                         # List all users in this schema for debugging
@@ -410,7 +410,7 @@ def admin_login(request):
             user = authenticate(request, username=username, password=password)
         
         if user and user.is_staff and user.is_active:
-            logger.warning(f'[admin_login] ✅ Login successful for: {username}')
+            logger.warning(f'[admin_login] Login successful for: {username}')
             
             # Check if explicitly requesting Django admin (via query param or next URL)
             use_django_admin = request.GET.get('django_admin', 'false').lower() == 'true'

@@ -43,7 +43,7 @@ class Command(BaseCommand):
         
         self.stdout.write(
             self.style.SUCCESS(
-                f'✅ Created SLA policy: {policy.name} ({policy.priority}) - '
+                f'Created SLA policy: {policy.name} ({policy.priority}) - '
                 f'{policy.resolution_time} minutes resolution time'
             )
         )

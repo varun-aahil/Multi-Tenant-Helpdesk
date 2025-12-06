@@ -60,7 +60,7 @@ class Command(BaseCommand):
                 created_count += 1
                 self.stdout.write(
                     self.style.SUCCESS(
-                        f'✅ Created SLA policy: {policy.name} ({policy.priority}) - {policy.resolution_time} minutes'
+                        f'Created SLA policy: {policy.name} ({policy.priority}) - {policy.resolution_time} minutes'
                     )
                 )
             else:
@@ -76,19 +76,19 @@ class Command(BaseCommand):
                     updated_count += 1
                     self.stdout.write(
                         self.style.WARNING(
-                            f'📝 Updated SLA policy: {policy.name} ({policy.priority})'
+                            f'Updated SLA policy: {policy.name} ({policy.priority})'
                         )
                     )
                 else:
                     self.stdout.write(
                         self.style.SUCCESS(
-                            f'✅ SLA policy already exists: {policy.name} ({policy.priority})'
+                            f'SLA policy already exists: {policy.name} ({policy.priority})'
                         )
                     )
         
         self.stdout.write(
             self.style.SUCCESS(
-                f'\n✅ SLA Policies Setup Complete: {created_count} created, {updated_count} updated'
+                f'\nSLA Policies Setup Complete: {created_count} created, {updated_count} updated'
             )
         )
 

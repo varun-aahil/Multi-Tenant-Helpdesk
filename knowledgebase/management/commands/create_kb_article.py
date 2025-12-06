@@ -31,7 +31,7 @@ class Command(BaseCommand):
         
         self.stdout.write(
             self.style.SUCCESS(
-                f'✅ Created knowledge base article: {article.title} (ID: {article.id})'
+                f'Created knowledge base article: {article.title} (ID: {article.id})'
             )
         )
 
