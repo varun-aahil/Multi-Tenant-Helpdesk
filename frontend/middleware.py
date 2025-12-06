@@ -19,7 +19,7 @@ class TokenAuthMiddleware:
         # Debug: Log tenant and path for every request
         try:
             from django_tenants.utils import get_tenant
-            tenant = get_tenant()
+            tenant = get_tenant(request)
             logger.warning(f'[TokenAuthMiddleware] Request to {request.path} - Tenant: {tenant.schema_name if tenant else "public"}')
         except Exception as e:
             logger.warning(f'[TokenAuthMiddleware] Request to {request.path} - Could not get tenant: {e}')

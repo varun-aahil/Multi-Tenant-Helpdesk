@@ -31,7 +31,7 @@ class DebugTenantMiddleware:
         # Try to get tenant
         try:
             from django_tenants.utils import get_tenant
-            tenant = get_tenant()
+            tenant = get_tenant(request)
             if tenant:
                 logger.warning(f'[DebugTenantMiddleware] Tenant found: {tenant.schema_name}')
             else:

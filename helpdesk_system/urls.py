@@ -21,7 +21,7 @@ def debug_test_view(request):
     
     try:
         from django_tenants.utils import get_tenant
-        tenant = get_tenant()
+        tenant = get_tenant(request)
         tenant_info = f"Tenant: {tenant.schema_name if tenant else 'public'}"
         logger.warning(f'[debug_test_view] {tenant_info}')
     except Exception as e:
