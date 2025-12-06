@@ -64,8 +64,27 @@ Let's fix the deployment!
 
 6. Click "Create Web Service"
 
-## Step 5: Create Worker Service (Celery)
+## Step 5: Celery Worker (Background Tasks)
 
+**⚠️ IMPORTANT: Render's Background Workers are NOT free!** The cheapest plan is $7/month.
+
+### Option 1: Skip Celery for Now (Free)
+If you don't need background tasks immediately, you can skip this step. Your app will work, but:
+- Scheduled tasks (like SLA checks) won't run automatically
+- Email notifications might be delayed
+- You can still use the app normally
+
+### Option 2: Run Worker in Same Container (Free but Not Recommended)
+You can modify your Dockerfile to run both web and worker, but this is not ideal:
+- Uses more memory
+- If one crashes, both crash
+- Not production-ready
+
+### Option 3: Use Adaptable.io Instead
+**Adaptable.io has a free tier** that might work better. See `ADAPTABLE_DEPLOYMENT.md`.
+
+### Option 4: Pay for Render Worker ($7/month)
+If you need Celery and want to use Render:
 1. Click "New +"
 2. Select "Background Worker"
 3. Connect same GitHub repository
@@ -74,7 +93,7 @@ Let's fix the deployment!
    - **Environment**: `Docker`
    - **Dockerfile Path**: `Dockerfile`
    - **Start Command**: `celery -A helpdesk_system worker --beat --loglevel=info --concurrency=2`
-   - **Plan**: Free
+   - **Plan**: Starter ($7/month) - **No free tier available**
 
 5. **Environment Variables** (same as web service):
    ```

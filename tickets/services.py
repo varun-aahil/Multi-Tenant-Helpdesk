@@ -152,6 +152,10 @@ class TicketService:
 
     @staticmethod
     def format_time_to_escalation(ticket: Ticket):
+        # Don't show timer for resolved or closed tickets
+        if ticket.status in ['Resolved', 'Closed']:
+            return None
+        
         delta = TicketService.get_time_to_escalation(ticket)
         if delta is None:
             return {
@@ -161,8 +165,7 @@ class TicketService:
             }
         
         total_seconds = int(delta.total_seconds())
-        # Don't mark as overdue if ticket is resolved or closed
-        is_overdue = total_seconds <= 0 and ticket.status not in ['Resolved', 'Closed']
+        is_overdue = total_seconds <= 0
         remaining = abs(total_seconds)
         
         days, remainder = divmod(remaining, 86400)
@@ -178,10 +181,7 @@ class TicketService:
                 minutes = 1
             time_str = f"{minutes}m"
         
-        # If ticket is resolved or closed, show resolved status instead of overdue
-        if ticket.status in ['Resolved', 'Closed']:
-            label = f"Resolved"
-        elif is_overdue:
+        if is_overdue:
             label = f"Overdue by {time_str}"
         else:
             label = f"Escalates in {time_str}"

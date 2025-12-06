@@ -33,6 +33,12 @@ Adaptable doesn't have built-in Redis, but you can:
 - Use Upstash Redis (free tier): https://upstash.com
 - Or skip Redis for now (Celery will work without it, just slower)
 
+## Step 5b: Celery Worker (Background Tasks)
+
+**Note:** Adaptable may not have a free background worker option. Check their pricing:
+- If they have free workers, create a separate service with start command: `celery -A helpdesk_system worker --beat --loglevel=info --concurrency=2`
+- If not, you can skip Celery for now (app will still work, just no scheduled tasks)
+
 ## Step 6: Environment Variables
 
 Add these in Adaptable dashboard:
