@@ -38,6 +38,8 @@ def simple_test(request):
 
 urlpatterns = [
     path('simple-test/', simple_test, name='simple_test'),  # Simplest possible test
+    # Override admin login to use our custom login view
+    path('admin/login/', include('frontend.urls')),  # This will be handled by frontend.urls
     path('admin/', admin.site.urls),
     path('api/', include('tickets.urls')),
     path('api/', include('knowledgebase.urls')),

@@ -7,6 +7,8 @@ from . import views
 urlpatterns = [
     # Root - redirect to login (works in public schema)
     path('', views.root_view, name='root'),
+    # Django admin login override (must come before customer_login)
+    path('admin/login/', views.admin_login, name='admin_login_override'),
     # Customer panel
     path('login/', views.customer_login, name='customer_login'),
     path('register/', views.customer_register, name='customer_register'),
