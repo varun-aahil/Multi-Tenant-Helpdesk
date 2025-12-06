@@ -59,8 +59,13 @@ Let's fix the deployment!
    REDIS_URL=<from Redis service>
    SECRET_KEY=<generate a random secret key>
    DJANGO_ENV=prod
-   ALLOWED_HOSTS=helpdesk-web.onrender.com
+   ALLOWED_HOSTS=helpdesk-web-693i.onrender.com
+   DEFAULT_TENANT_DOMAIN=helpdesk-web-693i.onrender.com
+   DEFAULT_TENANT_SCHEMA=default
+   DEFAULT_TENANT_NAME=Default Tenant
    ```
+   
+   **Important:** Replace `helpdesk-web-693i.onrender.com` with your actual Render domain!
 
 6. Click "Create Web Service"
 
