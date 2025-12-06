@@ -2,8 +2,13 @@
 Debug middleware to trace request processing and tenant routing
 """
 import logging
+import sys
+
+# Force logging to stderr to ensure it appears
+logging.basicConfig(stream=sys.stderr, level=logging.WARNING)
 
 logger = logging.getLogger(__name__)
+logger.warning('[middleware_debug] MODULE LOADED!')
 
 
 class DebugTenantMiddleware:
@@ -11,6 +16,7 @@ class DebugTenantMiddleware:
     Debug middleware to log tenant routing and URL resolution
     """
     def __init__(self, get_response):
+        logger.warning('[DebugTenantMiddleware] __init__ called!')
         self.get_response = get_response
 
     def __call__(self, request):
