@@ -33,6 +33,7 @@ SHARED_APPS = [
     'django.contrib.messages',
     'django.contrib.admin',
     'django.contrib.staticfiles',
+    'frontend',  # Frontend URLs should be available in all schemas
 ]
 
 TENANT_APPS = [
@@ -44,7 +45,7 @@ TENANT_APPS = [
     'tickets',
     'knowledgebase',
     'customers',
-    'frontend',
+    'frontend',  # Also in TENANT_APPS for tenant-specific data/models
 ]
 
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
