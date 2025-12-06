@@ -397,7 +397,16 @@ def admin_login(request):
         
         if user and user.is_staff and user.is_active:
             logger.warning(f'[admin_login] ✅ Login successful for: {username}')
-            # Generate JWT tokens
+            
+            # Check if there's a 'next' parameter (from Django admin redirect)
+            next_url = request.GET.get('next') or request.POST.get('next')
+            if next_url and next_url.startswith('/admin/'):
+                # Redirect to Django admin - use Django's session auth
+                from django.contrib.auth import login
+                login(request, user)  # This sets up Django session for admin
+                return redirect(next_url)
+            
+            # Generate JWT tokens for frontend admin panel
             refresh = RefreshToken.for_user(user)
             access_token = str(refresh.access_token)
             refresh_token = str(refresh)
