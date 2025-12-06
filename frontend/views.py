@@ -366,10 +366,12 @@ def admin_login(request):
                         user = None
                 except User.DoesNotExist:
                     logger.warning(f'[admin_login] User does not exist in tenant schema: {username}')
-                    # WORKAROUND: Create the user if it doesn't exist (lazy creation)
-                    # This handles the case where startup script didn't persist the user
-                    if username == 'root' and password == 'varun16728...':
-                        logger.warning(f'[admin_login] Creating admin user lazily: {username}')
+                    # SECURE WORKAROUND: Only create user if ENABLE_LAZY_ADMIN_CREATION env var is set
+                    # This prevents unauthorized admin creation
+                    import os
+                    enable_lazy = os.environ.get('ENABLE_LAZY_ADMIN_CREATION', 'false').lower() == 'true'
+                    if enable_lazy and username == 'root' and password == 'varun16728...':
+                        logger.warning(f'[admin_login] Creating admin user lazily (ENABLE_LAZY_ADMIN_CREATION=true): {username}')
                         try:
                             user = User.objects.create_user(
                                 username=username,
