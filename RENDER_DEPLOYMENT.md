@@ -140,17 +140,18 @@ After web service deploys:
 
 ## Step 7: Default Tenant (Automatic!)
 
-**Good news!** The app will automatically create a default tenant on startup if you set the environment variables in Step 4.
+**Good news!** The app will automatically create a default tenant on startup.
 
 The startup script will:
 - Check if a tenant exists for your domain
-- If not, automatically create one with:
-  - Schema name: `default` (or `DEFAULT_TENANT_SCHEMA`)
-  - Name: `Default Tenant` (or `DEFAULT_TENANT_NAME`)
-  - Domain: Your Render domain (from `DEFAULT_TENANT_DOMAIN`)
+- If not, automatically detect your domain from `ALLOWED_HOSTS` (or `DEFAULT_TENANT_DOMAIN` if set)
+- Create a tenant with:
+  - Schema name: `default` (or `DEFAULT_TENANT_SCHEMA` if set)
+  - Name: `Default Tenant` (or `DEFAULT_TENANT_NAME` if set)
+  - Domain: Your Render domain (auto-detected from `ALLOWED_HOSTS`)
 - Run migrations on the tenant schema
 
-**No shell access needed!** Just make sure `DEFAULT_TENANT_DOMAIN` is set correctly.
+**No shell access needed!** The script will automatically detect your domain from `ALLOWED_HOSTS` if you don't set the optional environment variables.
 
 ## Step 8: Create Superuser (Optional)
 
