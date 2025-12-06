@@ -54,12 +54,23 @@ from tenants.models import Client, Domain
 from django_tenants.utils import tenant_context
 from django.core.management import call_command
 
-# Get domain from environment, ALLOWED_HOSTS, or skip
+# Get domain from environment, Render service URL, or ALLOWED_HOSTS
 default_domain = os.environ.get('DEFAULT_TENANT_DOMAIN', '')
 default_schema = os.environ.get('DEFAULT_TENANT_SCHEMA', 'default')
 default_name = os.environ.get('DEFAULT_TENANT_NAME', 'Default Tenant')
 
-# If no domain from env, try to get from ALLOWED_HOSTS
+# Try to get from Render's service URL (if available)
+if not default_domain:
+    render_url = os.environ.get('RENDER_SERVICE_URL') or os.environ.get('RENDER_EXTERNAL_URL')
+    if render_url:
+        # Extract domain from URL (remove https:// and path)
+        from urllib.parse import urlparse
+        parsed = urlparse(render_url)
+        if parsed.netloc:
+            default_domain = parsed.netloc
+            print(f'📋 Detected domain from Render service URL: {default_domain}')
+
+# If still no domain, try to get from ALLOWED_HOSTS
 if not default_domain:
     from django.conf import settings
     if hasattr(settings, 'ALLOWED_HOSTS') and settings.ALLOWED_HOSTS:
@@ -70,39 +81,106 @@ if not default_domain:
                 print(f'📋 Detected domain from ALLOWED_HOSTS: {default_domain}')
                 break
 
+# Also check Domain model (django-tenants uses this for routing)
+domains_to_check = [default_domain] if default_domain else []
+if default_domain and default_domain != os.environ.get('DEFAULT_TENANT_DOMAIN', ''):
+    # Also check if we need to create tenant for all ALLOWED_HOSTS
+    from django.conf import settings
+    if hasattr(settings, 'ALLOWED_HOSTS') and settings.ALLOWED_HOSTS:
+        for host in settings.ALLOWED_HOSTS:
+            if host and host != '*' and '.' in host and 'localhost' not in host.lower() and host not in domains_to_check:
+                domains_to_check.append(host)
+
 if default_domain:
-    # Check if tenant already exists
-    if not Client.objects.filter(domain_url=default_domain).exists():
+    # Check if tenant already exists (by domain_url or Domain model)
+    tenant_exists = False
+    existing_tenant = None
+    
+    # Check by domain_url
+    if Client.objects.filter(domain_url=default_domain).exists():
+        tenant_exists = True
+        existing_tenant = Client.objects.filter(domain_url=default_domain).first()
+        print(f'✅ Tenant found by domain_url: {default_domain}')
+    
+    # Also check Domain model (this is what django-tenants actually uses)
+    if Domain.objects.filter(domain=default_domain).exists():
+        tenant_exists = True
+        domain_obj = Domain.objects.filter(domain=default_domain).first()
+        existing_tenant = domain_obj.tenant
+        print(f'✅ Tenant found by Domain model: {default_domain}')
+    
+    if not tenant_exists:
         print(f'🔧 Creating default tenant: {default_name} ({default_schema}) for domain {default_domain}')
         try:
-            tenant = Client(
-                schema_name=default_schema,
-                name=default_name,
-                domain_url=default_domain,
-                brand_colors={}
-            )
-            tenant.save()
+            # Check if schema already exists (from a previous tenant creation)
+            schema_exists = False
+            try:
+                with tenant_context(Client.objects.filter(schema_name=default_schema).first()):
+                    schema_exists = True
+            except:
+                pass
             
-            # Create domain
-            domain = Domain(
+            # Create tenant only if schema doesn't exist
+            if not Client.objects.filter(schema_name=default_schema).exists():
+                tenant = Client(
+                    schema_name=default_schema,
+                    name=default_name,
+                    domain_url=default_domain,
+                    brand_colors={}
+                )
+                tenant.save()
+            else:
+                # Use existing tenant with this schema
+                tenant = Client.objects.filter(schema_name=default_schema).first()
+                # Update domain_url if different
+                if tenant.domain_url != default_domain:
+                    print(f'📝 Updating tenant domain_url from {tenant.domain_url} to {default_domain}')
+                    tenant.domain_url = default_domain
+                    tenant.save()
+            
+            # Create or update Domain record (this is what django-tenants uses for routing)
+            domain, created = Domain.objects.get_or_create(
                 domain=default_domain,
-                tenant=tenant,
-                is_primary=True
+                defaults={
+                    'tenant': tenant,
+                    'is_primary': True
+                }
             )
-            domain.save()
+            if not created:
+                # Domain exists but might point to wrong tenant - update it
+                if domain.tenant != tenant:
+                    print(f'📝 Updating Domain record to point to correct tenant')
+                    domain.tenant = tenant
+                    domain.is_primary = True
+                    domain.save()
             
-            # Run migrations on tenant schema
-            print(f'📦 Running migrations on tenant schema \"{default_schema}\"...')
-            with tenant_context(tenant):
-                call_command('migrate', verbosity=1, interactive=False)
+            # Run migrations on tenant schema if needed
+            if not schema_exists:
+                print(f'📦 Running migrations on tenant schema \"{default_schema}\"...')
+                with tenant_context(tenant):
+                    call_command('migrate', verbosity=1, interactive=False)
             
-            print(f'✅ Successfully created default tenant \"{default_name}\" for {default_domain}')
+            print(f'✅ Successfully created/updated tenant \"{default_name}\" for domain {default_domain}')
         except Exception as e:
             print(f'⚠️  Failed to create default tenant: {e}')
             import traceback
             traceback.print_exc()
     else:
-        print(f'✅ Default tenant already exists for domain {default_domain}')
+        # Tenant exists, but ensure Domain record exists too
+        if not Domain.objects.filter(domain=default_domain).exists():
+            print(f'🔧 Adding Domain record for existing tenant: {default_domain}')
+            try:
+                domain = Domain(
+                    domain=default_domain,
+                    tenant=existing_tenant,
+                    is_primary=True
+                )
+                domain.save()
+                print(f'✅ Added Domain record for {default_domain}')
+            except Exception as e:
+                print(f'⚠️  Failed to add Domain record: {e}')
+        else:
+            print(f'✅ Default tenant already exists for domain {default_domain}')
 else:
     print('⚠️  Could not determine domain for tenant creation')
     print('   Options:')
