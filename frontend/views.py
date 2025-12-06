@@ -35,7 +35,8 @@ def is_staff_user(user):
 
 def root_view(request):
     """Root view - redirects to customer login"""
-    return redirect('customer_login')
+    # Use direct path redirect instead of named URL to avoid potential issues
+    return redirect('/login/')
 
 def customer_register(request):
     """Customer registration page"""
