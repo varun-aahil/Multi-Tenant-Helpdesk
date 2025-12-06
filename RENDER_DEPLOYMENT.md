@@ -54,18 +54,32 @@ Let's fix the deployment!
    - **Plan**: Free
 
 5. **Environment Variables**:
+   
+   **Required:**
    ```
    DATABASE_URL=<from PostgreSQL service>
    REDIS_URL=<from Redis service>
    SECRET_KEY=<generate a random secret key>
    DJANGO_ENV=prod
    ALLOWED_HOSTS=helpdesk-web-693i.onrender.com
+   ```
+   
+   **Optional (for tenant auto-creation):**
+   ```
    DEFAULT_TENANT_DOMAIN=helpdesk-web-693i.onrender.com
    DEFAULT_TENANT_SCHEMA=default
    DEFAULT_TENANT_NAME=Default Tenant
    ```
    
+   **Note:** If you don't set the optional variables, the startup script will automatically detect the domain from `ALLOWED_HOSTS` and create a tenant with default settings.
+   
    **Important:** Replace `helpdesk-web-693i.onrender.com` with your actual Render domain!
+   
+   **Where to set environment variables in Render:**
+   - After creating the service, go to the service dashboard
+   - Click on "Environment" tab (or look for "Environment Variables" section)
+   - Click "Add Environment Variable" or the "+" button
+   - Add each variable one by one
 
 6. Click "Create Web Service"
 
