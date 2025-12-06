@@ -80,10 +80,13 @@ You can modify your Dockerfile to run both web and worker, but this is not ideal
 - If one crashes, both crash
 - Not production-ready
 
-### Option 3: Use Adaptable.io Instead
+### Option 3: Deploy Celery on Separate Free Service (Recommended!)
+**Best of both worlds!** Deploy your Django app on Render (free) and run Celery worker on Railway/Koyeb/Cloud Run (free). See `HYBRID_DEPLOYMENT.md` for complete guide.
+
+### Option 4: Use Adaptable.io Instead
 **Adaptable.io has a free tier** that might work better. See `ADAPTABLE_DEPLOYMENT.md`.
 
-### Option 4: Pay for Render Worker ($7/month)
+### Option 5: Pay for Render Worker ($7/month)
 If you need Celery and want to use Render:
 1. Click "New +"
 2. Select "Background Worker"
