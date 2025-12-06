@@ -161,11 +161,11 @@ if default_domain:
                 else:
                     print(f'✅ Domain record already correctly configured')
             
-            # Run migrations on tenant schema if needed
-            if not schema_exists:
-                print(f'📦 Running migrations on tenant schema \"{default_schema}\"...')
-                with tenant_context(tenant):
-                    call_command('migrate', verbosity=1, interactive=False)
+            # Run migrations on tenant schema (always run to ensure tables exist)
+            print(f'📦 Running migrations on tenant schema \"{default_schema}\"...')
+            with tenant_context(tenant):
+                call_command('migrate', verbosity=2, interactive=False)
+                print(f'✅ Migrations completed for tenant schema \"{default_schema}\"')
             
             print(f'✅ Successfully created/updated tenant \"{default_name}\" for domain {default_domain}')
             
@@ -210,6 +210,17 @@ if default_domain:
                 print(f'✅ Updated Domain record')
             else:
                 print(f'✅ Domain record exists and is correctly configured for {default_domain}')
+        
+        # Always ensure migrations are run on existing tenant schema
+        print(f'📦 Ensuring migrations are up to date for tenant schema \"{existing_tenant.schema_name}\"...')
+        try:
+            with tenant_context(existing_tenant):
+                call_command('migrate', verbosity=2, interactive=False)
+                print(f'✅ Migrations verified for tenant schema \"{existing_tenant.schema_name}\"')
+        except Exception as e:
+            print(f'⚠️  Migration check failed for tenant schema: {e}')
+            import traceback
+            traceback.print_exc()
 else:
     print('⚠️  Could not determine domain for tenant creation')
     print('   Options:')
