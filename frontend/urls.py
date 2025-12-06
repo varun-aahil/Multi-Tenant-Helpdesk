@@ -5,8 +5,10 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    # Root - redirect to login (works in public schema)
+    path('', views.root_view, name='root'),
     # Customer panel
-    path('', views.customer_login, name='customer_login'),
+    path('login/', views.customer_login, name='customer_login'),
     path('register/', views.customer_register, name='customer_register'),
     path('logout/', views.customer_logout, name='customer_logout'),
     path('customer/', views.customer_dashboard, name='customer_dashboard'),

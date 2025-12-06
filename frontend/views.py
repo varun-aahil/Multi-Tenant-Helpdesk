@@ -33,6 +33,10 @@ def is_staff_user(user):
 
 # ==================== Customer Panel Views ====================
 
+def root_view(request):
+    """Root view - redirects to customer login"""
+    return redirect('customer_login')
+
 def customer_register(request):
     """Customer registration page"""
     if request.method == 'POST':
