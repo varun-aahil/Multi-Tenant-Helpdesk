@@ -342,29 +342,46 @@ def admin_login(request):
         logger = logging.getLogger(__name__)
         
         # Get tenant - TenantMainMiddleware should have already set the schema
-        from django_tenants.utils import get_tenant
-        from django.contrib.auth import hashers
+        from django_tenants.utils import get_tenant, tenant_context
+        from django.db import connection
         tenant = get_tenant(request)
         
         user = None
         
         if tenant:
             logger.warning(f'[admin_login] Authenticating in tenant context: {tenant.schema_name}')
-            # Try to get user directly (we're already in tenant context via middleware)
-            try:
-                user = User.objects.get(username=username)
-                logger.warning(f'[admin_login] User found: {username}, is_staff={user.is_staff}, is_active={user.is_active}')
+            # Check current schema
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT current_schema();")
+                current_schema = cursor.fetchone()[0]
+                logger.warning(f'[admin_login] Current database schema: {current_schema}')
+            
+            # Explicitly use tenant_context to ensure we're in the right schema
+            with tenant_context(tenant):
+                # Check schema again inside context
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT current_schema();")
+                    context_schema = cursor.fetchone()[0]
+                    logger.warning(f'[admin_login] Schema inside tenant_context: {context_schema}')
                 
-                # Check password manually
-                if user.check_password(password):
-                    logger.warning(f'[admin_login] Password check PASSED for: {username}')
-                else:
-                    logger.warning(f'[admin_login] Password check FAILED for: {username}')
-                    user = None
-            except User.DoesNotExist:
-                logger.warning(f'[admin_login] User does not exist in tenant schema: {username}')
-                # Fallback to authenticate() as backup
-                user = authenticate(request, username=username, password=password)
+                # Try to get user directly
+                try:
+                    user = User.objects.get(username=username)
+                    logger.warning(f'[admin_login] User found: {username}, is_staff={user.is_staff}, is_active={user.is_active}')
+                    
+                    # Check password manually
+                    if user.check_password(password):
+                        logger.warning(f'[admin_login] Password check PASSED for: {username}')
+                    else:
+                        logger.warning(f'[admin_login] Password check FAILED for: {username}')
+                        user = None
+                except User.DoesNotExist:
+                    logger.warning(f'[admin_login] User does not exist in tenant schema: {username}')
+                    # List all users in this schema for debugging
+                    all_users = User.objects.all()
+                    logger.warning(f'[admin_login] All users in tenant schema: {[u.username for u in all_users]}')
+                    # Fallback to authenticate() as backup
+                    user = authenticate(request, username=username, password=password)
         else:
             logger.warning(f'[admin_login] No tenant found, using authenticate()')
             user = authenticate(request, username=username, password=password)
