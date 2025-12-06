@@ -233,6 +233,18 @@ if default_domain:
                            print(f'✅ SLA policies verified for tenant schema \"{existing_tenant.schema_name}\"')
                        except Exception as e:
                            print(f'⚠️  SLA policy setup failed (non-critical): {e}')
+                       
+                       # Create admin user if it doesn't exist
+                       print(f'👤 Ensuring admin user exists for tenant schema \"{existing_tenant.schema_name}\"...')
+                       try:
+                           call_command('create_admin_user', 
+                                       username='root', 
+                                       password='varun16728...',
+                                       email='admin@example.com',
+                                       verbosity=1)
+                           print(f'✅ Admin user verified for tenant schema \"{existing_tenant.schema_name}\"')
+                       except Exception as e:
+                           print(f'⚠️  Admin user setup failed (non-critical): {e}')
                except Exception as e:
                    print(f'⚠️  Migration check failed for tenant schema: {e}')
                    import traceback
