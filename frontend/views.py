@@ -332,13 +332,18 @@ def customer_kb_article(request, article_id):
 # ==================== Admin Panel Views ====================
 
 def admin_login(request):
-    """Admin login page - returns token or redirects to Django admin"""
+    """Admin login page - returns token and redirects to custom admin panel"""
     # Handle GET request - show login form
     if request.method == 'GET':
-        # Check if user is already logged in (for Django admin)
+        # Check if user is already logged in
         if request.user.is_authenticated and request.user.is_staff:
-            next_url = request.GET.get('next', '/admin/')
-            return redirect(next_url)
+            # Check if explicitly requesting Django admin
+            use_django_admin = request.GET.get('django_admin', 'false').lower() == 'true'
+            if use_django_admin:
+                next_url = request.GET.get('next', '/admin/')
+                return redirect(next_url)
+            # Default: redirect to custom admin panel
+            return redirect('admin_dashboard')
         return render(request, 'frontend/admin/login.html')
     
     # Handle POST request - process login
@@ -407,9 +412,11 @@ def admin_login(request):
         if user and user.is_staff and user.is_active:
             logger.warning(f'[admin_login] ✅ Login successful for: {username}')
             
-            # Check if there's a 'next' parameter (from Django admin redirect)
+            # Check if explicitly requesting Django admin (via query param or next URL)
+            use_django_admin = request.GET.get('django_admin', 'false').lower() == 'true'
             next_url = request.GET.get('next') or request.POST.get('next')
-            if next_url and next_url.startswith('/admin/'):
+            
+            if use_django_admin or (next_url and next_url.startswith('/admin/') and 'knowledgebase' not in next_url):
                 # Redirect to Django admin - use Django's session auth
                 from django.contrib.auth import login
                 # Ensure we're in tenant context when logging in
@@ -419,18 +426,22 @@ def admin_login(request):
                 else:
                     login(request, user)
                 # Use absolute URL for redirect to avoid issues
-                from django.urls import reverse
                 try:
-                    return redirect(next_url)
+                    return redirect(next_url or '/admin/')
                 except Exception as e:
                     logger.warning(f'[admin_login] Redirect error: {e}, redirecting to /admin/')
                     return redirect('/admin/')
             
-            # Generate JWT tokens for frontend admin panel
+            # Default: Generate JWT tokens and redirect to custom admin panel
             refresh = RefreshToken.for_user(user)
             access_token = str(refresh.access_token)
             refresh_token = str(refresh)
             
+            # Store tokens in session for the login_success page
+            request.session['admin_access_token'] = access_token
+            request.session['admin_refresh_token'] = refresh_token
+            
+            # Render login success page which will redirect to admin_dashboard
             response = render(request, 'frontend/admin/login_success.html', {
                 'access_token': access_token,
                 'refresh_token': refresh_token,
