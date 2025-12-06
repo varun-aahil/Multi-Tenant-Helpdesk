@@ -47,6 +47,16 @@ LOGGING = {
             'level': 'WARNING',
             'propagate': False,
         },
+        'frontend.middleware': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'helpdesk_system.urls': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
     },
 }
 
