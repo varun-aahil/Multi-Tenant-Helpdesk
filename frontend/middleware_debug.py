@@ -20,7 +20,9 @@ class DebugTenantMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        # Log request details
+        # Force immediate logging to stderr
+        import sys
+        print(f'[DebugTenantMiddleware] __call__ EXECUTED! Request: {request.method} {request.path}', file=sys.stderr, flush=True)
         logger.warning(f'[DebugTenantMiddleware] Request: {request.method} {request.path}')
         logger.warning(f'[DebugTenantMiddleware] Host: {request.get_host()}')
         logger.warning(f'[DebugTenantMiddleware] META HTTP_HOST: {request.META.get("HTTP_HOST", "N/A")}')
@@ -38,7 +40,9 @@ class DebugTenantMiddleware:
             import traceback
             logger.warning(f'[DebugTenantMiddleware] Traceback: {traceback.format_exc()}')
         
+        print(f'[DebugTenantMiddleware] About to call get_response', file=sys.stderr, flush=True)
         response = self.get_response(request)
+        print(f'[DebugTenantMiddleware] Got response: {response.status_code}', file=sys.stderr, flush=True)
         
         logger.warning(f'[DebugTenantMiddleware] Response status: {response.status_code}')
         
