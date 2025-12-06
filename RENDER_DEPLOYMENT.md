@@ -119,12 +119,34 @@ After web service deploys:
    python manage.py migrate_schemas
    ```
 
-## Step 7: Create Superuser
+## Step 7: Create Default Tenant
+
+**IMPORTANT:** Since this is a multi-tenant app, you need to create a tenant for your Render domain.
+
+In the Render web service shell:
+```bash
+python manage.py create_tenant_custom \
+  --schema_name default \
+  --name "Default Tenant" \
+  --domain_url helpdesk-web-693i.onrender.com
+```
+
+**Replace `helpdesk-web-693i.onrender.com` with your actual Render domain!**
+
+This will:
+- Create a tenant in the public schema
+- Create the tenant's database schema
+- Map the domain to the tenant
+- Run migrations on the tenant schema
+
+## Step 8: Create Superuser
 
 In the same shell:
 ```bash
 python manage.py createsuperuser
 ```
+
+**Note:** You'll need to create the superuser within the tenant context. After creating the tenant, you can create users normally.
 
 ## Important Notes
 
