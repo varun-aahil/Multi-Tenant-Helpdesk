@@ -51,8 +51,7 @@ TENANT_APPS = [
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
 
 MIDDLEWARE = [
-    # TEMPORARILY DISABLED to test if URLs work without tenant routing
-    # 'django_tenants.middleware.main.TenantMainMiddleware',  # Must be first
+    'django_tenants.middleware.main.TenantMainMiddleware',  # Must be first
     'frontend.middleware_debug.DebugTenantMiddleware',  # Debug middleware right after tenant routing
     'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',

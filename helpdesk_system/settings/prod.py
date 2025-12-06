@@ -6,7 +6,17 @@ import os
 
 DEBUG = False
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
+# Get ALLOWED_HOSTS from environment, but also auto-detect from Render
+allowed_hosts = env.list('ALLOWED_HOSTS', default=[])
+# Auto-detect Render domain if available
+render_hostname = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if render_hostname and render_hostname not in allowed_hosts:
+    allowed_hosts.append(render_hostname)
+# Also check for any .onrender.com domains in the environment
+for key, value in os.environ.items():
+    if 'onrender.com' in str(value) and value not in allowed_hosts:
+        allowed_hosts.append(value)
+ALLOWED_HOSTS = allowed_hosts if allowed_hosts else ['*']  # Fallback to * if empty
 
 # Security settings for production
 SECURE_SSL_REDIRECT = env('SECURE_SSL_REDIRECT', default=True)

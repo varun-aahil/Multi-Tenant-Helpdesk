@@ -24,8 +24,9 @@ class DebugTenantMiddleware:
         import sys
         print(f'[DebugTenantMiddleware] __call__ EXECUTED! Request: {request.method} {request.path}', file=sys.stderr, flush=True)
         logger.warning(f'[DebugTenantMiddleware] Request: {request.method} {request.path}')
-        logger.warning(f'[DebugTenantMiddleware] Host: {request.get_host()}')
-        logger.warning(f'[DebugTenantMiddleware] META HTTP_HOST: {request.META.get("HTTP_HOST", "N/A")}')
+        # Use META directly to avoid DisallowedHost exception
+        http_host = request.META.get("HTTP_HOST", "N/A")
+        logger.warning(f'[DebugTenantMiddleware] META HTTP_HOST: {http_host}')
         
         # Try to get tenant
         try:
