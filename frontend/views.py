@@ -700,6 +700,52 @@ def admin_knowledge_base(request):
     return render(request, 'frontend/admin/knowledge_base.html', context)
 
 
+def admin_kb_article_create(request):
+    """Admin knowledge base article create"""
+    user = get_user_from_token(request)
+    if not user or not user.is_staff:
+        messages.error(request, 'Please login as admin')
+        return redirect('admin_login')
+    
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        content = request.POST.get('content')
+        category = request.POST.get('category', '')
+        tags_input = request.POST.get('tags', '')
+        is_published = request.POST.get('is_published') == 'on'
+        
+        # Parse tags (comma-separated or JSON)
+        import json
+        tags = []
+        if tags_input:
+            try:
+                # Try to parse as JSON first
+                parsed = json.loads(tags_input)
+                if isinstance(parsed, list):
+                    tags = parsed
+            except (json.JSONDecodeError, TypeError):
+                # If not JSON, treat as comma-separated
+                tags = [tag.strip() for tag in tags_input.split(',') if tag.strip()]
+        
+        article = KnowledgeBase.objects.create(
+            title=title,
+            content=content,
+            category=category,
+            tags=tags,
+            is_published=is_published,
+            created_by=user
+        )
+        
+        messages.success(request, 'Article created successfully')
+        return redirect('admin_kb_article_detail', article_id=article.id)
+    
+    context = {
+        'user': user,
+        'article': None,  # New article
+    }
+    return render(request, 'frontend/admin/kb_article_detail.html', context)
+
+
 def admin_kb_article_detail(request, article_id):
     """Admin knowledge base article detail/edit"""
     user = get_user_from_token(request)
@@ -713,7 +759,21 @@ def admin_kb_article_detail(request, article_id):
         article.title = request.POST.get('title')
         article.content = request.POST.get('content')
         article.category = request.POST.get('category', '')
+        tags_input = request.POST.get('tags', '')
         article.is_published = request.POST.get('is_published') == 'on'
+        
+        # Parse tags (comma-separated or JSON)
+        import json
+        if tags_input:
+            try:
+                # Try to parse as JSON first
+                parsed = json.loads(tags_input)
+                if isinstance(parsed, list):
+                    article.tags = parsed
+            except (json.JSONDecodeError, TypeError):
+                # If not JSON, treat as comma-separated
+                article.tags = [tag.strip() for tag in tags_input.split(',') if tag.strip()]
+        
         article.save()
         messages.success(request, 'Article updated successfully')
         return redirect('admin_kb_article_detail', article_id=article.id)

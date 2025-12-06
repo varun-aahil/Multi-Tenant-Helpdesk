@@ -1,12 +1,16 @@
 {% extends 'frontend/base.html' %}
 
-{% block title %}Edit Article - Admin Panel{% endblock %}
+{% block title %}{% if article %}Edit{% else %}Create{% endif %} Article - Admin Panel{% endblock %}
 
 {% block content %}
 <div style="max-width: 1000px; margin: 0 auto;">
     <div class="card">
-        <h2 style="margin-bottom: 0.5rem; color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 1rem;">Edit Knowledge Base Article</h2>
-        <p style="color: #6b7280; margin-bottom: 2rem;">Update article details and content</p>
+        <h2 style="margin-bottom: 0.5rem; color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 1rem;">
+            {% if article %}Edit{% else %}Create{% endif %} Knowledge Base Article
+        </h2>
+        <p style="color: #6b7280; margin-bottom: 2rem;">
+            {% if article %}Update article details and content{% else %}Create a new knowledge base article{% endif %}
+        </p>
         
         <form method="post" id="editArticleForm">
             {% csrf_token %}
@@ -14,28 +18,34 @@
             
             <div class="form-group">
                 <label for="title">Title *</label>
-                <input type="text" id="title" name="title" value="{{ article.title }}" required placeholder="Enter article title">
+                <input type="text" id="title" name="title" value="{% if article %}{{ article.title }}{% endif %}" required placeholder="Enter article title">
             </div>
             
             <div class="form-group">
                 <label for="category">Category</label>
-                <input type="text" id="category" name="category" value="{{ article.category|default:'' }}" placeholder="e.g., General, FAQ, Troubleshooting">
+                <input type="text" id="category" name="category" value="{% if article %}{{ article.category|default:'' }}{% endif %}" placeholder="e.g., General, FAQ, Troubleshooting">
+            </div>
+            
+            <div class="form-group">
+                <label for="tags">Tags</label>
+                <input type="text" id="tags" name="tags" value="{% if article %}{{ article.tags|join:', ' }}{% endif %}" placeholder="Enter tags separated by commas (e.g., tag1, tag2, tag3)">
+                <small style="color: #6b7280; display: block; margin-top: 0.5rem;">Separate multiple tags with commas</small>
             </div>
             
             <div class="form-group">
                 <label for="content">Content *</label>
-                <textarea id="content" name="content" required style="min-height: 400px; font-family: inherit;" placeholder="Enter article content...">{{ article.content }}</textarea>
+                <textarea id="content" name="content" required style="min-height: 400px; font-family: inherit;" placeholder="Enter article content...">{% if article %}{{ article.content }}{% endif %}</textarea>
             </div>
             
             <div class="form-group">
                 <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 1rem; background: #f9fafb; border-radius: 8px; border: 2px solid #e5e7eb; transition: all 0.3s;">
-                    <input type="checkbox" name="is_published" {% if article.is_published %}checked{% endif %} style="width: 20px; height: 20px; cursor: pointer;">
+                    <input type="checkbox" name="is_published" {% if article and article.is_published %}checked{% endif %} style="width: 20px; height: 20px; cursor: pointer;">
                     <span style="font-weight: 600; color: #374151;">Publish this article</span>
                 </label>
             </div>
             
             <div style="display: flex; gap: 1rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 2px solid #e5e7eb;">
-                <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+                <button type="submit" class="btn btn-primary">💾 {% if article %}Save Changes{% else %}Create Article{% endif %}</button>
                 <a href="{% url 'admin_knowledge_base' %}" class="btn btn-secondary">Cancel</a>
             </div>
         </form>

@@ -28,6 +28,7 @@ urlpatterns = [
     path('admin-panel/tickets/<int:ticket_id>/', views.admin_ticket_detail, name='admin_ticket_detail'),
     path('admin-panel/customers/', views.admin_customers, name='admin_customers'),
     path('admin-panel/knowledge-base/', views.admin_knowledge_base, name='admin_knowledge_base'),
+    path('admin-panel/knowledge-base/create/', views.admin_kb_article_create, name='admin_kb_article_create'),
     path('admin-panel/knowledge-base/<int:article_id>/', views.admin_kb_article_detail, name='admin_kb_article_detail'),
 ]
 

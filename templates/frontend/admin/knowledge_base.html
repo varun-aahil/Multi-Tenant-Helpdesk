@@ -5,7 +5,7 @@
 {% block content %}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
     <h1>Knowledge Base</h1>
-    <a href="{% url 'admin:knowledgebase_knowledgebase_add' %}" class="btn btn-primary">Create Article</a>
+    <a href="{% url 'admin_kb_article_create' %}" class="btn btn-primary">Create Article</a>
 </div>
 
 {% if search or selected_category or published_filter %}
