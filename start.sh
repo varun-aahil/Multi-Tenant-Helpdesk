@@ -166,6 +166,14 @@ if default_domain:
             with tenant_context(tenant):
                 call_command('migrate', verbosity=2, interactive=False)
                 print(f'✅ Migrations completed for tenant schema \"{default_schema}\"')
+                
+                # Setup default SLA policies
+                print(f'📋 Setting up default SLA policies for tenant schema \"{default_schema}\"...')
+                try:
+                    call_command('setup_default_sla_policies', verbosity=1)
+                    print(f'✅ SLA policies created for tenant schema \"{default_schema}\"')
+                except Exception as e:
+                    print(f'⚠️  SLA policy setup failed (non-critical): {e}')
             
             print(f'✅ Successfully created/updated tenant \"{default_name}\" for domain {default_domain}')
             
