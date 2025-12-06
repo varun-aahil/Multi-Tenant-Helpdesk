@@ -7,13 +7,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Debug: Log URL patterns being loaded
-try:
-    from django_tenants.utils import get_tenant
-    tenant = get_tenant()
-    logger.warning(f'URLs loaded for tenant: {tenant.schema_name if tenant else "public"}')
-except:
-    logger.warning('URLs loaded (could not get tenant)')
+# Debug: Log URL patterns being loaded (this happens at import time, before tenant routing)
+logger.warning('URL patterns being loaded (import time)')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -22,3 +17,6 @@ urlpatterns = [
     path('api/', include('customers.urls')),
     path('', include('frontend.urls')),
 ]
+
+# Debug: Log that URL patterns are configured
+logger.warning(f'URL patterns configured: {len(urlpatterns)} patterns')

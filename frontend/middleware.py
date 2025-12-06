@@ -3,6 +3,9 @@ Middleware to handle JWT token authentication for template views
 """
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class TokenAuthMiddleware:
@@ -13,6 +16,14 @@ class TokenAuthMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        # Debug: Log tenant and path for every request
+        try:
+            from django_tenants.utils import get_tenant
+            tenant = get_tenant()
+            logger.warning(f'[TokenAuthMiddleware] Request to {request.path} - Tenant: {tenant.schema_name if tenant else "public"}')
+        except Exception as e:
+            logger.warning(f'[TokenAuthMiddleware] Request to {request.path} - Could not get tenant: {e}')
+        
         # Try to get token from various sources (NEVER from URL for security)
         token = None
         
@@ -62,4 +73,3 @@ class TokenAuthMiddleware:
             pass
         
         return response
-
