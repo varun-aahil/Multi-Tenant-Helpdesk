@@ -113,6 +113,7 @@ DATABASE_ROUTERS = (
 TENANT_MODEL = "tenants.Client"
 TENANT_DOMAIN_MODEL = "tenants.Domain"
 SHOW_PUBLIC_IF_NO_TENANT_FOUND = True
+PUBLIC_SCHEMA_URLCONF = 'helpdesk_system.urls'  # Explicitly set URL conf for public schema
 
 # Debug: Log all URL resolution attempts
 import logging
