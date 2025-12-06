@@ -57,6 +57,11 @@ LOGGING = {
             'level': 'WARNING',
             'propagate': False,
         },
+        'frontend.middleware_debug': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
     },
 }
 
