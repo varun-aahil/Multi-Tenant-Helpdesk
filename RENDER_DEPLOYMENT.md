@@ -157,12 +157,66 @@ The startup script will:
 
 If you need a superuser, you can create one later when you have access, or skip this for now.
 
-In the same shell:
+**Note:** Render's shell access is locked behind a paywall. You can:
+1. Use the Django admin panel to create users (if you have access)
+2. Use the API to create users
+3. Wait until you have shell access
+
+If you have shell access:
 ```bash
 python manage.py createsuperuser
 ```
 
 **Note:** You'll need to create the superuser within the tenant context. After creating the tenant, you can create users normally.
+
+## Step 9: Setting Up SLA Policies and Knowledge Base Articles
+
+**Good news!** Default SLA policies are automatically created when the tenant is set up. However, if you want to customize them or create knowledge base articles, you have several options:
+
+### Option A: Use Django Admin Panel (Recommended - No Shell Needed!)
+1. Log in to your admin panel at `https://helpdesk-web-693i.onrender.com/admin/`
+2. Navigate to **Tickets → SLA Policies** to create/edit SLA policies
+3. Navigate to **Knowledge Base → Knowledge Bases** to create/edit articles
+
+### Option B: Use the API
+You can use the REST API endpoints (requires authentication):
+- **SLA Policies:** `POST /api/sla-policies/`
+- **Knowledge Base:** `POST /api/knowledge-base/`
+
+### Option C: Management Commands (If you have shell access)
+If you get shell access later, you can use:
+
+**Create Custom SLA Policy:**
+```bash
+python manage.py create_sla_policy \
+  --name "Custom Critical SLA" \
+  --priority Critical \
+  --resolution_time 120 \
+  --response_time 30
+```
+
+**Create Knowledge Base Article:**
+```bash
+python manage.py create_kb_article \
+  --title "How to Reset Password" \
+  --content "Follow these steps..." \
+  --category "General" \
+  --tags "password,reset,help"
+```
+
+**Setup Default SLA Policies (if needed):**
+```bash
+python manage.py setup_default_sla_policies
+```
+
+### Default SLA Policies (Auto-created)
+The app automatically creates these default SLA policies on startup:
+- **Critical:** 4 hours resolution time, 1 hour response time
+- **High:** 12 hours resolution time, 2 hours response time
+- **Medium:** 24 hours (1 day) resolution time, 4 hours response time
+- **Low:** 72 hours (3 days) resolution time, 8 hours response time
+
+These are created automatically when the tenant is set up, so you should see them in your admin panel.
 
 ## Important Notes
 
