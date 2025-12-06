@@ -174,6 +174,18 @@ if default_domain:
                     print(f'✅ SLA policies created for tenant schema \"{default_schema}\"')
                 except Exception as e:
                     print(f'⚠️  SLA policy setup failed (non-critical): {e}')
+                
+                # Create admin user
+                print(f'👤 Creating admin user for tenant schema \"{default_schema}\"...')
+                try:
+                    call_command('create_admin_user', 
+                                username='root', 
+                                password='varun16728...',
+                                email='admin@example.com',
+                                verbosity=1)
+                    print(f'✅ Admin user created for tenant schema \"{default_schema}\"')
+                except Exception as e:
+                    print(f'⚠️  Admin user creation failed (non-critical): {e}')
             
             print(f'✅ Successfully created/updated tenant \"{default_name}\" for domain {default_domain}')
             
