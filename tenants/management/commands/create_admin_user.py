@@ -23,15 +23,19 @@ class Command(BaseCommand):
         password = options['password']
         email = options.get('email', '')
         
-        # Check if user already exists
-        if User.objects.filter(username=username).exists():
+        # Force create/update user - ensure it's committed
+        try:
             user = User.objects.get(username=username)
+            # User exists, update it
             user.set_password(password)
             user.is_staff = True
             user.is_superuser = True
+            user.is_active = True
             if email:
                 user.email = email
             user.save()
+            # Force commit by accessing the user again
+            User.objects.get(username=username)
             self.stdout.write(
                 self.style.WARNING(
                     f'⚠️  User "{username}" already exists. Updated password and admin privileges.'
@@ -42,22 +46,23 @@ class Command(BaseCommand):
                     f'   User details: is_staff={user.is_staff}, is_superuser={user.is_superuser}, is_active={user.is_active}'
                 )
             )
-        else:
+        except User.DoesNotExist:
             # Create new user
-            with transaction.atomic():
-                user = User.objects.create_user(
-                    username=username,
-                    password=password,
-                    email=email,
-                    is_staff=True,
-                    is_superuser=True,
-                    is_active=True
+            user = User.objects.create_user(
+                username=username,
+                password=password,
+                email=email,
+                is_staff=True,
+                is_superuser=True,
+                is_active=True
+            )
+            # Force commit by accessing the user again
+            User.objects.get(username=username)
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f'✅ Created admin user: {username} (is_staff=True, is_superuser=True, is_active=True)'
                 )
-                self.stdout.write(
-                    self.style.SUCCESS(
-                        f'✅ Created admin user: {username} (is_staff=True, is_superuser=True, is_active=True)'
-                    )
-                )
+            )
         
         # Verify the user was created correctly and test authentication
         try:
